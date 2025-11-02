@@ -17,7 +17,7 @@ const TagsAndOpenNow = () => {
 
   return (
     <div className="flex items-center justify-between mt-5">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 items-center gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 items-center gap-5">
         {familyTag &&
           familyTag.map((item, index) => (
             <div
