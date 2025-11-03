@@ -183,24 +183,51 @@ const Popular = () => {
                               </h3>
 
                               <div className="my-3 flex items-center gap-2">
-                                <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4 " />{" "}
-                                <span>{business?.review?.length || 0}</span>{" "}
-                                <span className="text-xs flex items-center gap-1">
-                                  ({" "}
-                                  <Image
-                                    src={"/images/google.jpeg"}
-                                    alt="img.png"
-                                    width={1000}
-                                    height={1000}
-                                    className="h-4 w-4"
-                                  />{" "}
-                                  )
-                                </span>
+                                {business?.review?.length === 0 ? (
+                                  <span className="text-sm text-gray-500">
+                                    No reviews
+                                  </span>
+                                ) : business?.review?.length === 1 ? (
+                                  <div className="flex items-center gap-1">
+                                    {/* Single 5-star */}
+                                    <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
+                                    <span className="text-sm text-gray-700">
+                                      5.0
+                                    </span>
+                                    <span className="text-xs flex items-center gap-1">
+                                      (
+                                      <Image
+                                        src="/images/google.jpeg"
+                                        alt="google"
+                                        width={1000}
+                                        height={1000}
+                                        className="h-4 w-4"
+                                      />
+                                      )
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
+                                    <span>{business?.review?.length}</span>
+                                    <span className="text-xs flex items-center gap-1">
+                                      (
+                                      <Image
+                                        src="/images/google.jpeg"
+                                        alt="google"
+                                        width={1000}
+                                        height={1000}
+                                        className="h-4 w-4"
+                                      />
+                                      )
+                                    </span>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Services */}
                               <div className="flex items-center gap-2">
-                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
                                   {business?.services
                                     ?.slice(0, 2)
                                     ?.map((service, index) => (

@@ -54,14 +54,24 @@ export function LocationAutocomplete({
 
         const formattedResults = data
           .map((place) => {
-            const city = place.address.city;
-            const state =
-              place.address.state_code || // some places return short code like "CA"
-              (place.address.state ? place.address.state : "");
+            const city =
+              place.address.city ||
+              place.address.town ||
+              place.address.village;
 
-            if (!city) return ""; // skip if no city available
+            // Try to get 2-letter state code (capitalized)
+            let state = place.address.state_code
+              ? place.address.state_code.toUpperCase()
+              : "";
 
-            // Combine city and state only
+            // If no state_code, use first two letters of state name
+            if (!state && place.address.state) {
+              state = place.address.state.slice(0, 2).toUpperCase();
+            }
+
+            if (!city) return "";
+
+            // Combine city and short state
             return state ? `${city}, ${state}` : city;
           })
           .filter((v) => v.trim() !== "");
