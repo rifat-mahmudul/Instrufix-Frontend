@@ -108,7 +108,7 @@ const BusinessInfo = () => {
 
   return (
     <div>
-      <ResultsFiltering />
+      <ResultsFiltering allBusiness={allBusiness} />
       <TagsAndOpenNow />
 
       <div className="space-y-6 mt-8">

@@ -3,14 +3,23 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import { Button } from "../ui/button";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const AddBusinessSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string>("");
+  const router = useRouter();
+  const session = useSession();
+  const authStatus = session?.status;
 
   const handleAddBusinessClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsModalOpen(true);
+    if (authStatus === "authenticated") {
+      setIsModalOpen(true);
+    } else {
+      router.push("/add-a-business");
+    }
   };
 
   const handleOptionSelect = (option: string) => {
@@ -20,7 +29,10 @@ const AddBusinessSection = () => {
   const handleContinue = () => {
     if (selectedOption === "I'm a customer") {
       window.location.href = "/add-a-business";
-    } else if (selectedOption === "I'm the business owner" || selectedOption === "I work at the business") {
+    } else if (
+      selectedOption === "I'm the business owner" ||
+      selectedOption === "I work at the business"
+    ) {
       window.location.href = "/add-my-business";
     }
     setIsModalOpen(false);
@@ -46,7 +58,9 @@ const AddBusinessSection = () => {
           </div>
 
           <div>
-            <h1 className="font-semibold text-xl">Can&apos;t find your business?</h1>
+            <h1 className="font-semibold text-xl">
+              Can&apos;t find your business?
+            </h1>
             <p className="text-[#485150] text-[16px] mt-2">
               Adding your business to Instrufix is completely free!
             </p>
@@ -54,7 +68,7 @@ const AddBusinessSection = () => {
         </div>
 
         <div className="w-full md:w-auto">
-          <Button 
+          <Button
             onClick={handleAddBusinessClick}
             className="w-full md:w-auto bg-teal-600 hover:bg-teal-700 text-white px-8 h-[48px]"
           >
@@ -68,13 +82,25 @@ const AddBusinessSection = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">What&apos;s your relationship to the business?</h2>
-              <button 
+              <h2 className="text-xl font-semibold">
+                What&apos;s your relationship to the business?
+              </h2>
+              <button
                 onClick={handleCloseModal}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -89,11 +115,13 @@ const AddBusinessSection = () => {
                 onClick={() => handleOptionSelect("I work at the business")}
               >
                 <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${
-                    selectedOption === "I work at the business"
-                      ? "border-teal-600 bg-teal-600"
-                      : "border-gray-400"
-                  }`}>
+                  <div
+                    className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${
+                      selectedOption === "I work at the business"
+                        ? "border-teal-600 bg-teal-600"
+                        : "border-gray-400"
+                    }`}
+                  >
                     {selectedOption === "I work at the business" && (
                       <div className="w-2 h-2 rounded-full bg-white"></div>
                     )}
@@ -111,11 +139,13 @@ const AddBusinessSection = () => {
                 onClick={() => handleOptionSelect("I'm the business owner")}
               >
                 <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${
-                    selectedOption === "I'm the business owner"
-                      ? "border-teal-600 bg-teal-600"
-                      : "border-gray-400"
-                  }`}>
+                  <div
+                    className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${
+                      selectedOption === "I'm the business owner"
+                        ? "border-teal-600 bg-teal-600"
+                        : "border-gray-400"
+                    }`}
+                  >
                     {selectedOption === "I'm the business owner" && (
                       <div className="w-2 h-2 rounded-full bg-white"></div>
                     )}
@@ -133,11 +163,13 @@ const AddBusinessSection = () => {
                 onClick={() => handleOptionSelect("I'm a customer")}
               >
                 <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${
-                    selectedOption === "I'm a customer"
-                      ? "border-teal-600 bg-teal-600"
-                      : "border-gray-400"
-                  }`}>
+                  <div
+                    className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${
+                      selectedOption === "I'm a customer"
+                        ? "border-teal-600 bg-teal-600"
+                        : "border-gray-400"
+                    }`}
+                  >
                     {selectedOption === "I'm a customer" && (
                       <div className="w-2 h-2 rounded-full bg-white"></div>
                     )}

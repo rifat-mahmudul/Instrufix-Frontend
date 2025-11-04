@@ -12,7 +12,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFilterStore } from "@/zustand/stores/search-store";
 import React, { useEffect, useState } from "react";
 
-const ResultsFiltering = () => {
+type ResultsFilteringProps = {
+  allBusiness?: {
+    searchCount?: number;
+    [key: string]: unknown;
+  } | null;
+};
+
+const ResultsFiltering = ({ allBusiness = { searchCount: 0 } }: ResultsFilteringProps) => {
   const { setSort } = useFilterStore();
   const { location } = useSearchStore();
   const [hydrated, setHydrated] = useState(false);
@@ -40,8 +47,12 @@ const ResultsFiltering = () => {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-gray-500">24 Results for</h1>
-        <h1 className="text-xl font-bold">{`"${location || "San Francisco, CA"}"`}</h1>
+        <h1 className="text-gray-500">
+          {allBusiness?.searchCount} Results for
+        </h1>
+        <h1 className="text-xl font-bold">{`"${
+          location || "San Francisco, CA"
+        }"`}</h1>
       </div>
 
       <div>
@@ -54,8 +65,12 @@ const ResultsFiltering = () => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="rating-high-to-low">Rated High to Low</SelectItem>
-            <SelectItem value="rating-low-to-high">Rated Low to High</SelectItem>
+            <SelectItem value="rating-high-to-low">
+              Rated High to Low
+            </SelectItem>
+            <SelectItem value="rating-low-to-high">
+              Rated Low to High
+            </SelectItem>
             <SelectItem value="low-to-high">Price Low to High</SelectItem>
             <SelectItem value="high-to-low">Price High to Low</SelectItem>
           </SelectContent>
