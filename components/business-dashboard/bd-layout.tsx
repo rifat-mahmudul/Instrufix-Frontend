@@ -22,6 +22,7 @@ export default function BusinessDashboardLayout() {
     { name: "Dashboard", href: "/business-dashboard/bd-dashboard" },
     { name: "Reviews", href: "/business-dashboard/reviews" },
     { name: "Messages", href: "/business-dashboard/messages" },
+    { name: "Saved", href: "/business-dashboard/saved" },
     { name: "Settings", href: "/business-dashboard/settings" },
   ];
 

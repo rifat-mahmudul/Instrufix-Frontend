@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSavedBusiness } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export interface BusinessInfo {
   _id: string;
@@ -45,7 +46,9 @@ export interface SavedBusiness {
 }
 
 export default function UserSavedData() {
-  const { status } = useSession();
+  const queryClient = useQueryClient();
+  const session = useSession();
+  const token = session?.data?.user?.accessToken;
 
   const {
     data: savedData = [],
@@ -56,10 +59,45 @@ export default function UserSavedData() {
     queryKey: ["savedBusinessData"],
     queryFn: getSavedBusiness,
     select: (data) => data?.data,
-    enabled: status === "authenticated",
   });
 
-  console.log("savedData : ", savedData);
+  const deleteMutation = useMutation({
+    mutationFn: async (businessId: string) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/saved-business/${businessId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete saved business");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["savedBusinessData"] });
+      toast.success(data.message);
+    },
+    onError: (error) => {
+      console.error("Error deleting saved business:", error);
+      toast.error("Failed to delete saved business");
+    },
+  });
+
+  const handleDelete = async (businessId: string) => {
+    try {
+      await deleteMutation.mutateAsync(businessId);
+    } catch (error) {
+      console.error("Error in handleDelete:", error);
+      toast.error("Failed to delete business");
+    }
+  };
 
   if (isLoading)
     return (
@@ -76,7 +114,7 @@ export default function UserSavedData() {
       <div className="py-8 lg:py-20 container mx-auto px-3 lg:px-0">
         <div className="text-center">
           <p className="text-red-600">
-            Error loading subscription plans: {error.message}
+            Error loading saved businesses: {error.message}
           </p>
           <Button onClick={() => window.location.reload()} className="mt-4">
             Try Again
@@ -99,8 +137,8 @@ export default function UserSavedData() {
           <div className="space-y-2">
             <h4 className="text-xl font-semibold">No Shops Saved</h4>
             <p>
-              You haven’t saved any shops yet. Bookmark the ones you want to
-              support or visit later.
+              You haven&apos;t saved any shops yet. Bookmark the ones you want
+              to support or visit later.
             </p>
           </div>
         </div>
@@ -114,10 +152,28 @@ export default function UserSavedData() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       {savedData?.map((business: SavedBusiness) => (
-        <Link key={business?._id} href={`/search-result/${business?._id}`}>
-          <div className="bg-white rounded-lg border border-gray-100 shadow-lg p-6 h-full">
-            <div className="flex flex-col gap-5 h-full">
-              {/* Profile Image */}
+        <div
+          key={business?._id}
+          className="bg-white rounded-lg border border-gray-100 shadow-lg p-6 h-full relative"
+        >
+          {/* Delete Button - Top Right Corner */}
+          <button
+            onClick={() => handleDelete(business?._id)}
+            disabled={deleteMutation.isPending}
+            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-opacity duration-200 z-10"
+            title="Remove from saved"
+          >
+            {deleteMutation.isPending &&
+            deleteMutation.variables === business?._id ? (
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </button>
+
+          <div className="flex flex-col gap-5 h-full">
+            {/* Profile Image */}
+            <Link href={`/search-result/${business?._id}`}>
               <div className="flex-shrink-0 overflow-hidden rounded-lg">
                 <Image
                   src={business?.savedBusiness?.businessInfo?.image[0]}
@@ -127,8 +183,10 @@ export default function UserSavedData() {
                   className="rounded-lg object-cover w-full h-[250px] hover:scale-105 transition"
                 />
               </div>
+            </Link>
 
-              {/* Content */}
+            {/* Content */}
+            <Link href={`/search-result/${business?._id}`}>
               <div className="flex-1 flex flex-col">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                   <div className="flex-1">
@@ -158,9 +216,9 @@ export default function UserSavedData() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );
