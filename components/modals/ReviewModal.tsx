@@ -1,15 +1,11 @@
-
-
-
 "use client";
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ImageUp, Loader } from "lucide-react";
+import { ImageUp, Loader, X } from "lucide-react";
 import Image from "next/image";
 import { MdDelete } from "react-icons/md";
 import ReactStars from "react-stars";
-import { toast } from "sonner";
 import { addReview } from "@/lib/api";
 import { ReviewType } from "@/lib/types";
 
@@ -28,16 +24,18 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const maxImages = 5;
 
   const ratingChanged = (newRating: number) => {
     setRating(newRating);
+    setError(null); // Clear error when user interacts
   };
 
   const handleUploadImage = () => {
     if (imageFiles.length >= maxImages) {
-      toast.error(`You can only upload a maximum of ${maxImages} images.`);
+      setError(`You can only upload a maximum of ${maxImages} images.`);
       return;
     }
     const input = document.getElementById("image_input");
@@ -52,13 +50,14 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     const totalImages = imageFiles.length + newFiles.length;
 
     if (totalImages > maxImages) {
-      toast.error(`You can only upload a maximum of ${maxImages} images.`);
+      setError(`You can only upload a maximum of ${maxImages} images.`);
       return;
     }
 
     const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
     setImageFiles((prev) => [...prev, ...newFiles]);
     setImagePreviews((prev) => [...prev, ...newPreviews]);
+    setError(null); // Clear error when files are added
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -68,22 +67,25 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     const files = e.dataTransfer.files;
     if (!files) return;
 
-    const newFiles = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const newFiles = Array.from(files).filter((file) =>
+      file.type.startsWith("image/")
+    );
     const totalImages = imageFiles.length + newFiles.length;
 
     if (totalImages > maxImages) {
-      toast.error(`You can only upload a maximum of ${maxImages} images.`);
+      setError(`You can only upload a maximum of ${maxImages} images.`);
       return;
     }
 
     if (newFiles.length === 0) {
-      toast.error("Please drop valid image files.");
+      setError("Please drop valid image files.");
       return;
     }
 
     const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
     setImageFiles((prev) => [...prev, ...newFiles]);
     setImagePreviews((prev) => [...prev, ...newPreviews]);
+    setError(null); // Clear error when files are added
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -98,6 +100,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   const handleRemoveImage = (index: number) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setError(null); // Clear error when images are removed
   };
 
   const { mutateAsync: addReviewData, isPending } = useMutation({
@@ -107,15 +110,30 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       setIsModalOpen(true);
       setIsOpen(false);
     },
-    onError: () => {
-      toast.error("Something went wrong while submitting your review.");
-      setIsOpen(false);
-      setIsModalOpen(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Something went wrong while submitting your review.";
+      setError(errorMessage);
+      // Don't close the modal on error
     },
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null); // Clear previous errors
+
+    // Validation
+    if (!rating) {
+      setError("Please provide a rating.");
+      return;
+    }
+
+    if (imageFiles.length === 0) {
+      setError("At least one image is required.");
+      return;
+    }
 
     try {
       const form = e.currentTarget;
@@ -131,12 +149,17 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       await addReviewData(reviewData);
     } catch (error) {
       console.log("Error submitting review:", error);
+      // Error handling is done in onError callback
     }
+  };
+
+  const closeError = () => {
+    setError(null);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/25 flex items-center justify-center px-4">
-      <div className="bg-white w-full max-w-md lg:max-w-[720px] h-[630px] overflow-y-auto rounded-lg shadow-lg p-6 ">
+      <div className="bg-white w-full max-w-md lg:max-w-[720px] h-[630px] overflow-y-auto rounded-lg shadow-lg p-6 relative">
         <form onSubmit={handleSubmit}>
           <div className="space-y-6">
             <div className="text-center">
@@ -169,7 +192,13 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                 className="mt-2 w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[100px]"
               />
               <p className="text-sm text-gray-500 mt-1">
-                {200 - ((document.querySelector('textarea[name="feedback"]') as HTMLTextAreaElement)?.value.length || 0)} characters remaining
+                {200 -
+                  ((
+                    document.querySelector(
+                      'textarea[name="feedback"]'
+                    ) as HTMLTextAreaElement
+                  )?.value.length || 0)}{" "}
+                characters remaining
               </p>
             </div>
 
@@ -185,14 +214,18 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                 onChange={handleFileChange}
               />
               <div
-                className={`w-full h-full flex items-center justify-center flex-col gap-4 rounded-md cursor-pointer bg-[#F8F8F8] mt-4 text-teal-600 border border-dashed border-teal-600 ${isDragging ? "bg-teal-100" : ""}`}
+                className={`w-full h-full flex items-center justify-center flex-col gap-4 rounded-md cursor-pointer bg-[#F8F8F8] mt-4 text-teal-600 border border-dashed border-teal-600 ${
+                  isDragging ? "bg-teal-100" : ""
+                }`}
                 onClick={handleUploadImage}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
               >
                 <ImageUp className="text-5xl" />
-                <p className="text-center text-xl">Upload Photos or Drag & Drop (Max {maxImages})</p>
+                <p className="text-center text-xl">
+                  Upload Photos or Drag & Drop (Max {maxImages})
+                </p>
               </div>
             </div>
 
@@ -232,6 +265,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                 className={`flex-1 bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 transition ${
                   isPending && "opacity-70"
                 }`}
+                disabled={isPending}
               >
                 {isPending ? (
                   <span className="flex items-center justify-center">
@@ -243,6 +277,22 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                 )}
               </button>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md relative">
+                <div className="flex items-center">
+                  <span className="flex-1">{error}</span>
+                  <button
+                    type="button"
+                    onClick={closeError}
+                    className="text-red-500 hover:text-red-700 ml-2"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </div>
