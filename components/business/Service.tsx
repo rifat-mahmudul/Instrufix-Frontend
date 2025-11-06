@@ -148,7 +148,7 @@ const Service = ({
           {/* category select */}
           <div>
             {selectedInstruments.length > 0 ? (
-              <div className="my-5 flex items-center gap-4 max-w-[500px]">
+              <div className="my-5 flex items-center gap-4 max-w-[900px]">
                 {selectedInstruments.map((service, index) => (
                   <button
                     type="button"
@@ -322,7 +322,7 @@ const Service = ({
                 {/* category select */}
                 <div>
                   {selectedInstrumentsMusic.length > 0 ? (
-                    <div className="my-5 flex items-center gap-2 max-w-[800px]">
+                    <div className="my-5 flex items-center gap-2 max-w-[900px]">
                       {selectedInstrumentsMusic.map((service, index) => (
                         <button
                           type="button"
