@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUp, Loader, X } from "lucide-react";
 import Image from "next/image";
 import { MdDelete } from "react-icons/md";
@@ -25,6 +25,7 @@ const AddPhotoModal: React.FC<AddPhotoModalProps> = ({
   const session = useSession();
   const token = session?.data?.user?.accessToken;
   const userId = session?.data?.user?.id;
+  const queryClient = useQueryClient();
 
   const handleUploadImage = () => {
     if (fileInputRef.current) {
@@ -62,101 +63,106 @@ const AddPhotoModal: React.FC<AddPhotoModalProps> = ({
     });
   };
 
-const { mutateAsync: uploadPhotos, isPending } = useMutation({
-  mutationKey: ["upload-photos"],
-  mutationFn: async (formData: FormData) => {
-    if (!token) {
-      throw new Error("No authentication token found");
+  const { mutateAsync: uploadPhotos, isPending } = useMutation({
+    mutationKey: ["upload-photos"],
+    mutationFn: async (formData: FormData) => {
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      if (!businessID) {
+        throw new Error("Business ID is required");
+      }
+
+      if (!userId) {
+        throw new Error("User ID is required - please log in again");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/picture/upload-image`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Server error response:", errorText);
+
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(
+            errorData.message || `Server error: ${response.status}`
+          );
+        } catch {
+          throw new Error(
+            `Server error: ${response.status} ${response.statusText}`
+          );
+        }
+      }
+
+      const data = await response.json();
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Photos uploaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["get-single-business"] });
+      setIsAddPhotoOpen(false);
+
+      if (onPhotoUpload) {
+        onPhotoUpload(imageFiles);
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Upload error details:", error);
+      toast.error(error.message || "Failed to upload photos");
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (imageFiles.length === 0) {
+      toast.warning("Please select at least one photo to upload");
+      return;
     }
 
     if (!businessID) {
-      throw new Error("Business ID is required");
+      toast.error("Business ID is missing");
+      return;
     }
 
     if (!userId) {
-      throw new Error("User ID is required - please log in again");
+      toast.error("User authentication required - please log in again");
+      return;
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/picture/upload-image`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      }
-    );
+    try {
+      const formData = new FormData();
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Server error response:", errorText);
-      
-      try {
-        const errorData = JSON.parse(errorText);
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      } catch {
-        throw new Error(`Server error: ${response.status} ${response.statusText}`);
-      }
+      // Create a data object and stringify it as your backend expects
+      const dataObject = {
+        business: businessID,
+        user: userId,
+      };
+
+      // Add the stringified data to FormData as 'data' field
+      formData.append("data", JSON.stringify(dataObject));
+
+      // Add each image file
+      imageFiles.forEach((file) => {
+        formData.append("image", file); // This should match what multer expects
+      });
+
+      await uploadPhotos(formData);
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
     }
-
-    const data = await response.json();
-    return data;
-  },
-  onSuccess: (data) => {
-    toast.success(data.message || "Photos uploaded successfully!");
-    setIsAddPhotoOpen(false);
-    
-    if (onPhotoUpload) {
-      onPhotoUpload(imageFiles);
-    }
-  },
-  onError: (error: Error) => {
-    console.error("Upload error details:", error);
-    toast.error(error.message || "Failed to upload photos");
-  },
-});
-
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-
-  if (imageFiles.length === 0) {
-    toast.warning("Please select at least one photo to upload");
-    return;
-  }
-
-  if (!businessID) {
-    toast.error("Business ID is missing");
-    return;
-  }
-
-  if (!userId) {
-    toast.error("User authentication required - please log in again");
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    
-    // Create a data object and stringify it as your backend expects
-    const dataObject = {
-      business: businessID,
-      user: userId,
-    };
-    
-    // Add the stringified data to FormData as 'data' field
-    formData.append("data", JSON.stringify(dataObject));
-    
-    // Add each image file
-    imageFiles.forEach((file) => {
-      formData.append("image", file); // This should match what multer expects
-    });
-
-    await uploadPhotos(formData);
-  } catch (error) {
-    console.error("Error in handleSubmit:", error);
-  }
-};
+  };
 
   const handleClose = () => {
     imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
