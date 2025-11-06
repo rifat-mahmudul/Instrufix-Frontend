@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import LoginModal from "@/components/business/modal/login-modal";
 import ClaimModal from "./modal/claim-modal";
+import AddPhotoSuccessModal from "@/components/modals/add-photo-modal";
 
 interface Review {
   _id: string;
@@ -192,7 +193,9 @@ const ImageSlider = ({
 
   // Remove duplicates and filter out empty/null images
   const uniqueImages = useMemo(() => {
-    return Array.from(new Set(images.filter(img => img && img.trim() !== '')));
+    return Array.from(
+      new Set(images.filter((img) => img && img.trim() !== ""))
+    );
   }, [images]);
 
   const nextImage = () => {
@@ -200,7 +203,9 @@ const ImageSlider = ({
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length);
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length
+    );
   };
 
   const goToImage = (index: number) => {
@@ -229,7 +234,7 @@ const ImageSlider = ({
           onError={(e) => {
             // Fallback if image fails to load
             const target = e.target as HTMLImageElement;
-            target.src = '/images/placeholder-business.jpg';
+            target.src = "/images/placeholder-business.jpg";
           }}
         />
 
@@ -297,6 +302,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddPhoto, setIsAddPhotoOpen] = useState(false);
+  const [photoSuccessModal, setPhotoSuccessModal] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("mostRecent");
@@ -645,7 +651,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   // Combine all images from businessInfo.image and images array
   const allBusinessImages = [
     ...singleBusiness.businessInfo.image,
-    ...(singleBusiness.images || [])
+    ...(singleBusiness.images || []),
   ];
 
   return (
@@ -744,7 +750,12 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <AddPhotoModal
           setIsAddPhotoOpen={setIsAddPhotoOpen}
           businessID={singleBusiness?._id}
+          setPhotoSuccessModal={setPhotoSuccessModal}
         />
+      )}
+
+      {photoSuccessModal && (
+        <AddPhotoSuccessModal setIsModalOpen={setPhotoSuccessModal} />
       )}
 
       <ShareModal
@@ -793,40 +804,53 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                             {family}
                           </h4>
                           <div className="space-y-2 grid lg:grid-cols-2 gap-x-10">
-                            {(Object.entries(
-                              services.reduce((acc: Record<string, any[]>, service: any) => {
-                                const group = service.selectedInstrumentsGroup;
-                                if (!acc[group]) {
-                                  acc[group] = [];
-                                }
-                                acc[group].push(service);
-                                return acc;
-                              }, {} as Record<string, any[]>)
-                            ) as [string, any[]][]).map(([groupName, groupServices]: [string, any[]]) => (
-                              <div key={groupName} className="mb-3">
-                                {/* Group Name */}
-                                <div className="font-medium text-gray-700 mt-2">
-                                  {groupName}
-                                </div>
-
-                                {/* Group এর ভিতরের services */}
-                                {groupServices.map((service: any, index: number) => (
-                                  <div
-                                    key={index}
-                                    className="flex justify-between items-center py-1 text-sm"
-                                  >
-                                    <div>
-                                      <div className="text-gray-500">
-                                        {service.newInstrumentName}
-                                      </div>
-                                    </div>
-                                    <div className="font-medium text-xs text-gray-500">
-                                      {formatPrice(service)}
-                                    </div>
+                            {(
+                              Object.entries(
+                                services.reduce(
+                                  (
+                                    acc: Record<string, any[]>,
+                                    service: any
+                                  ) => {
+                                    const group =
+                                      service.selectedInstrumentsGroup;
+                                    if (!acc[group]) {
+                                      acc[group] = [];
+                                    }
+                                    acc[group].push(service);
+                                    return acc;
+                                  },
+                                  {} as Record<string, any[]>
+                                )
+                              ) as [string, any[]][]
+                            ).map(
+                              ([groupName, groupServices]: [string, any[]]) => (
+                                <div key={groupName} className="mb-3">
+                                  {/* Group Name */}
+                                  <div className="font-medium text-gray-700 mt-2">
+                                    {groupName}
                                   </div>
-                                ))}
-                              </div>
-                            ))}
+
+                                  {/* Group এর ভিতরের services */}
+                                  {groupServices.map(
+                                    (service: any, index: number) => (
+                                      <div
+                                        key={index}
+                                        className="flex justify-between items-center py-1 text-sm"
+                                      >
+                                        <div>
+                                          <div className="text-gray-500">
+                                            {service.newInstrumentName}
+                                          </div>
+                                        </div>
+                                        <div className="font-medium text-xs text-gray-500">
+                                          {formatPrice(service)}
+                                        </div>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              )
+                            )}
                           </div>
                         </div>
                       )

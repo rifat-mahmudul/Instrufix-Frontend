@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 
 interface AddPhotoModalProps {
   setIsAddPhotoOpen: (isOpen: boolean) => void;
+  setPhotoSuccessModal: (value: boolean) => void;
   businessID: string | undefined;
   onPhotoUpload?: (imageFiles: File[]) => void;
 }
@@ -18,6 +19,7 @@ const AddPhotoModal: React.FC<AddPhotoModalProps> = ({
   setIsAddPhotoOpen,
   businessID,
   onPhotoUpload,
+  setPhotoSuccessModal,
 }) => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -108,8 +110,8 @@ const AddPhotoModal: React.FC<AddPhotoModalProps> = ({
       const data = await response.json();
       return data;
     },
-    onSuccess: (data) => {
-      toast.success(data.message || "Photos uploaded successfully!");
+    onSuccess: () => {
+      setPhotoSuccessModal(true);
       queryClient.invalidateQueries({ queryKey: ["get-single-business"] });
       setIsAddPhotoOpen(false);
 
@@ -271,6 +273,8 @@ const AddPhotoModal: React.FC<AddPhotoModalProps> = ({
           </div>
         </form>
       </div>
+
+      {}
     </div>
   );
 };
