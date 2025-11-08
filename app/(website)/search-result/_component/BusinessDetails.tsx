@@ -38,6 +38,7 @@ import { useMutation } from "@tanstack/react-query";
 import LoginModal from "@/components/business/modal/login-modal";
 import ClaimModal from "./modal/claim-modal";
 import AddPhotoSuccessModal from "@/components/modals/add-photo-modal";
+import BusinessGalleryModal from "./modal/BusinessGalleryModal";
 
 interface Review {
   _id: string;
@@ -185,9 +186,11 @@ type SectionKey = "repair" | "lessons" | "otherService";
 const ImageSlider = ({
   images,
   businessName,
+  onImageClick,
 }: {
   images: string[];
   businessName: string;
+  onImageClick: () => void;
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -224,15 +227,18 @@ const ImageSlider = ({
 
   return (
     <div className="flex-shrink-0 relative group">
-      <div className="relative rounded-lg overflow-hidden h-[172px] w-[172px]">
+      <div
+        className="relative rounded-lg overflow-hidden h-[172px] w-[172px]"
+        onClick={onImageClick}
+      >
         <Image
           src={uniqueImages[currentImageIndex]}
           alt={`${businessName} - Image ${currentImageIndex + 1}`}
           width={172}
           height={172}
-          className="rounded-lg object-cover h-full w-full"
+          className="rounded-lg object-cover h-full w-full cursor-pointer"
+          onClick={onImageClick}
           onError={(e) => {
-            // Fallback if image fails to load
             const target = e.target as HTMLImageElement;
             target.src = "/images/placeholder-business.jpg";
           }}
@@ -296,6 +302,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     lessons: false,
     otherService: false,
   });
+
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -662,6 +670,13 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <ImageSlider
           images={allBusinessImages}
           businessName={singleBusiness.businessInfo.name}
+          onImageClick={() => setIsGalleryModalOpen(true)}
+        />
+
+        <BusinessGalleryModal
+          isOpen={isGalleryModalOpen}
+          onClose={() => setIsGalleryModalOpen(false)}
+          singleBusiness={singleBusiness}
         />
 
         {/* Business Info */}
