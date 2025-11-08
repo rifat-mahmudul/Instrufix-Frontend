@@ -403,8 +403,8 @@ export default function ManageUsersPage() {
                         })}
                       </td>
                       <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-base font-medium text-[#252525]">
-                        {user.userType === "businessOwner"
-                          ? "Business Owner"
+                        {user.userType === "businessMan"
+                          ? "Business"
                           : user.userType === "user"
                           ? "Customer"
                           : user?.userType?.charAt(0).toUpperCase() +
