@@ -349,7 +349,7 @@ const Navbar = () => {
                 </Link>
               </div>
               <DropdownMenu>
-                <DropdownMenuTrigger className="hover:text-teal-400 flex gap-1 items-center outline-none">
+                <DropdownMenuTrigger className="hover:text-primary flex gap-1 items-center outline-none">
                   <Avatar>
                     <AvatarImage src={userData?.imageLink} />
                     <AvatarFallback className="uppercase">
