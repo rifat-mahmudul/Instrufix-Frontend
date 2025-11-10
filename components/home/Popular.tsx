@@ -117,6 +117,7 @@ const Popular = () => {
               autoplay={{
                 delay: 3000,
                 disableOnInteraction: false,
+                pauseOnMouseEnter: true, // Added pause on hover
               }}
               loop={true}
             >
@@ -136,6 +137,7 @@ const Popular = () => {
                             autoplay={{
                               delay: 4000,
                               disableOnInteraction: false,
+                              pauseOnMouseEnter: true, // Added pause on hover
                             }}
                             loop={business?.businessInfo?.image?.length > 1}
                             className="w-full h-[250px] rounded-lg"
