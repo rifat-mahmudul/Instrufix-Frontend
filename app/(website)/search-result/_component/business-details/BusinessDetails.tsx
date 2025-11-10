@@ -47,6 +47,7 @@ interface Review {
     _id: string;
     name: string;
     email: string;
+    imageLink: string;
   } | null;
   business: string;
   googlePlaceId: string;
@@ -198,11 +199,13 @@ const ImageSlider = ({
     );
   }, [images]);
 
-  const nextImage = () => {
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Event bubbling বন্ধ করতে
     setCurrentImageIndex((prev) => (prev + 1) % uniqueImages.length);
   };
 
-  const prevImage = () => {
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Event bubbling বন্ধ করতে
     setCurrentImageIndex(
       (prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length
     );
@@ -225,16 +228,16 @@ const ImageSlider = ({
   return (
     <div className="flex-shrink-0 relative group">
       <div
-        className="relative rounded-lg overflow-hidden h-[172px] w-[172px]"
-        onClick={onImageClick}
+        className="relative rounded-lg overflow-hidden h-[172px] w-[172px] cursor-pointer"
+        onClick={onImageClick} // শুধুমাত্র parent div-এ click handler
       >
         <Image
           src={uniqueImages[currentImageIndex]}
           alt={`${businessName} - Image ${currentImageIndex + 1}`}
           width={172}
           height={172}
-          className="rounded-lg object-cover h-full w-full cursor-pointer"
-          onClick={onImageClick}
+          className="rounded-lg object-cover h-full w-full"
+          // Image element থেকে onClick remove করা হয়েছে
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = "/images/placeholder-business.jpg";
@@ -273,7 +276,10 @@ const ImageSlider = ({
           {uniqueImages.map((_, index) => (
             <button
               key={index}
-              onClick={() => goToImage(index)}
+              onClick={(e) => {
+                e.stopPropagation(); // Event bubbling বন্ধ করতে
+                goToImage(index);
+              }}
               className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
                 index === currentImageIndex
                   ? "bg-[#139a8e]"
@@ -511,9 +517,19 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-              <span className="text-teal-800 font-semibold">
-                {review.user?.name?.[0]?.toUpperCase() || "U"}
-              </span>
+              {review?.user?.imageLink ? (
+                <Image
+                  src={review?.user?.imageLink || ""}
+                  alt="img.png"
+                  width={1000}
+                  height={1000}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-teal-800 font-semibold text-xs">
+                  {review.user?.name?.[0]?.toUpperCase() || "U"}
+                </span>
+              )}
             </div>
           </div>
 

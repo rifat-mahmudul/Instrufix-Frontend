@@ -17,6 +17,7 @@ interface Review {
     _id: string;
     name: string;
     email: string;
+    imageLink?: string;
   } | null;
   createdAt: string;
 }
@@ -113,8 +114,6 @@ const BusinessGalleryModal = ({
 
         {/* Reviews Section */}
         <div>
-          <h3 className="font-bold text-lg mb-4">Reviews</h3>
-
           <div className="space-y-4">
             {approvedReviews.map((review) => (
               <div
@@ -122,10 +121,20 @@ const BusinessGalleryModal = ({
                 className="border-b border-gray-200 pb-4 last:border-b-0"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                    <span className="text-teal-800 font-semibold text-xs">
-                      {review.user?.name?.[0]?.toUpperCase() || "U"}
-                    </span>
+                  <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                    {review?.user?.imageLink ? (
+                      <Image
+                        src={review?.user?.imageLink || ""}
+                        alt="img.png"
+                        width={1000}
+                        height={1000}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-teal-800 font-semibold text-xs">
+                        {review.user?.name?.[0]?.toUpperCase() || "U"}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm">
@@ -151,24 +160,6 @@ const BusinessGalleryModal = ({
                 </div>
 
                 <p className="text-gray-700 text-sm">{review.feedback}</p>
-
-                {review.image.length > 0 && (
-                  <div className="flex gap-2 mt-2">
-                    {review.image.map((img, index) => (
-                      <div
-                        key={index}
-                        className="w-16 h-16 relative rounded-md overflow-hidden"
-                      >
-                        <Image
-                          src={img}
-                          alt={`Review image ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
 
