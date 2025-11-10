@@ -31,7 +31,14 @@ interface PlaceResult {
     state?: string;
     state_code?: string;
     country?: string;
+    postcode?: string;
+    country_code?: string;
+    county?: string;
+    road?: string;
+    house_number?: string;
   };
+  lat: string;
+  lon: string;
 }
 
 const BusinessInform: React.FC<BusinessInformProps> = ({
@@ -53,7 +60,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   website,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,48 +78,18 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
             addressName
-          )}&format=json&addressdetails=1&limit=10`
+          )}&format=json&addressdetails=1&limit=10&countrycodes=us,ca`
         );
         const data: PlaceResult[] = await response.json();
+        
+        // Filter results that have at least city/town and state information
+        const filteredResults = data.filter(place => 
+          (place.address.city || place.address.town || place.address.village) && 
+          place.address.state
+        );
 
-        const formattedResults = data
-          .map((place) => {
-            const city =
-              place.address.city ||
-              place.address.town ||
-              place.address.village;
-
-            // Try to get 2-letter state code (capitalized)
-            let state = place.address.state_code
-              ? place.address.state_code.toUpperCase()
-              : "";
-
-            // If no state_code, use first two letters of state name
-            if (!state && place.address.state) {
-              state = place.address.state.slice(0, 2).toUpperCase();
-            }
-
-            const fullAddress = place.display_name;
-
-            // Prefer city, state format if available, otherwise use full address
-            if (city && state) {
-              return `${city}, ${state}`;
-            } else if (city) {
-              return city;
-            } else {
-              // Shorten the full address if it's too long
-              return fullAddress.length > 50 
-                ? fullAddress.substring(0, 50) + '...' 
-                : fullAddress;
-            }
-          })
-          .filter((v) => v.trim() !== "");
-
-        // Remove duplicates
-        const uniqueResults = Array.from(new Set(formattedResults));
-
-        setSuggestions(uniqueResults);
-        setShowSuggestions(uniqueResults.length > 0);
+        setSuggestions(filteredResults);
+        setShowSuggestions(filteredResults.length > 0);
       } catch (error) {
         console.error("Error fetching locations:", error);
         setSuggestions([]);
@@ -125,8 +102,45 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     return () => clearTimeout(timeoutId);
   }, [addressName]);
 
-  const handleLocationSelect = (selected: string) => {
-    setAddressName(selected);
+  const formatAddress = (place: PlaceResult): string => {
+    const address = place.address;
+    
+    // Build address components
+    const street = address.road ? `${address.house_number ? address.house_number + ' ' : ''}${address.road}` : '';
+    const city = address.city || address.town || address.village || '';
+    const state = address.state || '';
+    const postcode = address.postcode || '';
+    const country = address.country || '';
+
+    // Create formatted address
+    let formattedAddress = '';
+    
+    if (street) {
+      formattedAddress += street + ', ';
+    }
+    
+    if (city) {
+      formattedAddress += city + ', ';
+    }
+    
+    if (state) {
+      formattedAddress += state + ' ';
+    }
+    
+    if (postcode) {
+      formattedAddress += postcode;
+    }
+    
+    if (country && country !== 'United States' && country !== 'Canada') {
+      formattedAddress += ', ' + country;
+    }
+
+    return formattedAddress.trim();
+  };
+
+  const handleLocationSelect = (place: PlaceResult) => {
+    const fullAddress = formatAddress(place);
+    setAddressName(fullAddress);
     setShowSuggestions(false);
   };
 
@@ -216,7 +230,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 <input
                   ref={addressInputRef}
                   type="text"
-                  placeholder="488 San Mateo Ave San Bruno, CA 94066"
+                  placeholder="488 San Mateo Ave, San Bruno, CA 94066"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
                   onChange={(e) => setAddressName(e.target.value)}
@@ -238,15 +252,24 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                     <div className="p-3 text-gray-500">No locations found</div>
                   ) : (
                     <ul>
-                      {suggestions.map((item, index) => (
+                      {suggestions.map((place, index) => (
                         <li
                           key={index}
                           className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => handleLocationSelect(item)}
+                          onClick={() => handleLocationSelect(place)}
                         >
-                          <div className="p-3 flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">{item}</span>
+                          <div className="p-3 flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
+                            <div>
+                              <span className="text-sm font-medium block">
+                                {formatAddress(place)}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-1 block">
+                                {place.display_name.length > 100 
+                                  ? place.display_name.substring(0, 100) + '...' 
+                                  : place.display_name}
+                              </span>
+                            </div>
                           </div>
                         </li>
                       ))}
