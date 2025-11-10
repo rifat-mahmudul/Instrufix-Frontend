@@ -31,6 +31,9 @@ interface Business {
   sellInstruments: boolean;
   offerMusicLessons: boolean;
   rentInstruments: boolean;
+  businessInfo: {
+    website: string;
+  };
 }
 
 interface ServiceTypeProps {
@@ -84,23 +87,21 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
           <div key={family}>
             <h4 className="font-medium text-primary text-xl mb-2">{family}</h4>
 
-            <div className="grid lg:grid-cols-2 gap-x-10">
+            <div className="grid lg:grid-cols-2 gap-x-12">
               {Object.entries(groupedByInstrument).map(
                 ([groupName, groupItems]) => (
                   <div key={groupName}>
-                    <div className="font-medium text-lg mt-2">
-                      {groupName}
-                    </div>
+                    <div className="font-medium text-lg mt-2">{groupName}</div>
 
                     {groupItems.map((item, index) => (
                       <div
                         key={index}
                         className="flex justify-between items-center py-1"
                       >
-                        <div className="text-gray-500">
+                        <div className="text-gray-700">
                           {item.newInstrumentName}
                         </div>
-                        <div className="font-medium text-xs text-gray-500">
+                        <div className="font-medium text-xs text-gray-700">
                           {formatPrice(item)}
                         </div>
                       </div>
@@ -121,7 +122,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
 
       {/* 🔧 Repair Services */}
       {singleBusiness.services.length > 0 && (
-        <div className="shadow-[0px_2px_12px_0px_#003D3914] p-6 rounded-lg">
+        <div className="shadow-[0px_2px_12px_0px_#003D3914] p-8 rounded-lg">
           <button
             onClick={() => toggleSection("repair")}
             className="w-full flex items-center justify-between text-left mb-4"
@@ -140,7 +141,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
 
       {/* 🎵 Music Lessons */}
       {singleBusiness.musicLessons.length > 0 && (
-        <div className="shadow-[0px_2px_12px_0px_#003D3914] p-6 rounded-lg">
+        <div className="shadow-[0px_2px_12px_0px_#003D3914] p-8 rounded-lg">
           <button
             onClick={() => toggleSection("lessons")}
             className="w-full flex items-center justify-between text-left mb-4"
@@ -187,7 +188,11 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
               <span className="font-semibold">rental </span>
             )}
             services. Please{" "}
-            <Link href="/" className="text-teal-600 font-semibold">
+            <Link
+              href={singleBusiness.businessInfo.website}
+              target="_blank"
+              className="text-primary font-semibold"
+            >
               contact the business
             </Link>{" "}
             to get a personalized quote.
