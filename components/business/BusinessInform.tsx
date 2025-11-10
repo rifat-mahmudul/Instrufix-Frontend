@@ -146,7 +146,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     } else {
       setPhoneError("");
     }
-  }, [phoneNumber]);
+  }, [phoneNumber, validatePhoneNumber]);
 
   const formatAddress = (place: PlaceResult): string => {
     const address = place.address;
