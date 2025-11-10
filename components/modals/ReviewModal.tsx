@@ -123,6 +123,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null); // Clear previous errors
+    const form = e.currentTarget;
+    const feedback = (form.feedback as HTMLTextAreaElement).value;
 
     // Validation
     if (!rating) {
@@ -130,15 +132,12 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       return;
     }
 
-    if (imageFiles.length === 0) {
-      setError("At least one image is required.");
+    if (!feedback || feedback.trim().length === 0) {
+      setError("Please write your feedback.");
       return;
     }
 
     try {
-      const form = e.currentTarget;
-      const feedback = (form.feedback as HTMLTextAreaElement).value;
-
       const reviewData = {
         rating,
         feedback,
@@ -159,7 +158,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/25 flex items-center justify-center px-4">
-      <div className="bg-white w-full max-w-md lg:max-w-[720px] h-[630px] overflow-y-auto rounded-lg shadow-lg p-6 relative">
+      <div className="bg-white w-full max-w-md lg:max-w-[720px] overflow-y-auto rounded-lg shadow-lg p-6 relative">
         <form onSubmit={handleSubmit}>
           <div className="space-y-6">
             <div className="text-center">
