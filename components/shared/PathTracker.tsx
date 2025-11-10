@@ -12,12 +12,30 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Fragment } from "react";
 
-const capitalize = (str: string) =>
-  str
+const capitalize = (str: string) => {
+  const alwaysCapitalize = ['business', 'company', 'organization']; // Words that should always be capitalized
+  
+  return str
     .replace(/-/g, " ")
     .split(" ")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // capitalize each
+    .map((word, index) => {
+      const lowerWord = word.toLowerCase();
+      
+      // Always capitalize first word
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }
+      
+      // Capitalize specific words like "Business", "Company", etc.
+      if (alwaysCapitalize.includes(lowerWord)) {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }
+      
+      // Keep other words in lowercase
+      return word.toLowerCase();
+    })
     .join(" ");
+};
 
 const PathTracker = ({
   title,
@@ -77,7 +95,7 @@ const PathTracker = ({
             <h1 className="font-semibold text-[32px] my-3">
               {segments.length
                 ? capitalize(header ? header : segments[segments.length - 1])
-                : "Home'"}
+                : "Home"}
             </h1>
           )}
 

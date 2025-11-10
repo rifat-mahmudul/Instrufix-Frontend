@@ -40,7 +40,7 @@ const ClaimModal: React.FC<LoginModalProps> = ({
           </button>
 
           <Link
-            href={"/claim-your-business"}
+            href={"/claim-my-business"}
             className="bg-primary text-white py-3 rounded-lg w-1/2 font-semibold"
           >
             <button>Claim Business</button>

@@ -1,6 +1,6 @@
 import PathTracker from "@/components/shared/PathTracker";
 import React from "react";
-import ClaimReviewBusiness from "../claim-your-business/_components/ClaimReviewBusiness";
+import ClaimReviewBusiness from "../claim-my-business/_components/ClaimReviewBusiness";
 
 const page = () => {
   return (
