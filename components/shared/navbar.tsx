@@ -162,10 +162,10 @@ const Navbar = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white text-gray-900 border-gray-200 w-full">
                     <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Write A Review
+                      Write a Review
                     </DropdownMenuItem>
                     <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Add A Business
+                      Add a Business
                     </DropdownMenuItem>
                     {sessionStatus === "unauthenticated" && (
                       <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
@@ -181,10 +181,10 @@ const Navbar = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white text-gray-900 border-gray-200 w-full">
                     <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Add My Business
+                      Add my Business
                     </DropdownMenuItem>
                     <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Claim My Business
+                      Claim my Business
                     </DropdownMenuItem>
                     {sessionStatus === "unauthenticated" && (
                       <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
@@ -255,12 +255,12 @@ const Navbar = () => {
                 <DropdownMenuContent className="bg-white border-gray-700 border-none">
                   <Link href={"/review-a-business"}>
                     <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
-                      Write A Review
+                      Write a Review
                     </DropdownMenuItem>
                   </Link>
                   <Link href={"/add-a-business"}>
                     <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
-                      Add A Business
+                      Add a Business
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
@@ -275,13 +275,13 @@ const Navbar = () => {
                 <DropdownMenuContent className="bg-white border-gray-700 border-none">
                   <Link href={"/add-my-business"}>
                     <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
-                      Add My Business
+                      Add my Business
                     </DropdownMenuItem>
                   </Link>
                   <Link href={"/claim-your-business"}>
                     {" "}
                     <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
-                      Claim My Business
+                      Claim my Business
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
