@@ -1,8 +1,22 @@
+"use client";
 import { Facebook, Instagram, Twitter } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import React from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 
 export default function Footer() {
+  const pathName = usePathname();
+  const router = useRouter();
+  const session = useSession();
+  const status = session?.status;
+
+  useEffect(() => {
+    if (status === "authenticated" && pathName === "/add-a-business") {
+      router.push("/add-my-business");
+    }
+  }, [status, pathName, router]);
+
   return (
     <footer className="py-20 bg-[#139a8e]">
       <div className="container text-white">
@@ -49,7 +63,7 @@ export default function Footer() {
           <div>
             <h1 className="font-semibold text-lg mb-3">Contact</h1>
             <ul>
-              <Link href={'https://mail.google.com/mail/'} target="_blank">
+              <Link href={"https://mail.google.com/mail/"} target="_blank">
                 <li className="hover:underline">contact@instrufix.com</li>
               </Link>
             </ul>
