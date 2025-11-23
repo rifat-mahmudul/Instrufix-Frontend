@@ -114,8 +114,21 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
 
   const handleSearch = () => {
     if (searchQuery.trim() || location.trim()) {
+      // উভয় সার্চ টার্ম এবং লোকেশন স্টোরে সংরক্ষণ করুন
       setSearch(searchQuery.trim());
-      router.push(`/search-result`);
+      // লোকেশনটি সার্চ স্টোরে সংরক্ষণ করুন (যদি আপনার ফিল্টার স্টোরে লোকেশন ফিল্ড থাকে)
+      // অথবা URL-এ প্যারামিটার হিসেবে পাঠান
+      
+      // URL তৈরি করুন যেখানে সার্চ টার্ম এবং লোকেশন উভয়ই থাকবে
+      const searchParams = new URLSearchParams();
+      if (searchQuery.trim()) {
+        searchParams.append('q', searchQuery.trim());
+      }
+      if (location.trim()) {
+        searchParams.append('location', location.trim());
+      }
+      
+      router.push(`/search-result?${searchParams.toString()}`);
       onResultClick?.();
     }
   };
