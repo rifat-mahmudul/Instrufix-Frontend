@@ -404,9 +404,6 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               {phoneError && (
                 <p className="mt-1 text-sm text-red-600">{phoneError}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">
-                Format: (XXX) XXX-XXXX
-              </p>
             </div>
 
             <div>

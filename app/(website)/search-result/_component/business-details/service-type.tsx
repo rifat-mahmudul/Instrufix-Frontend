@@ -90,22 +90,36 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
             <div className="grid lg:grid-cols-2 gap-x-12">
               {Object.entries(groupedByInstrument).map(
                 ([groupName, groupItems]) => (
-                  <div key={groupName}>
-                    <div className="font-medium text-lg mt-2">{groupName}</div>
-
-                    {groupItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center py-1"
-                      >
-                        <div className="text-gray-700">
-                          {item.newInstrumentName}
+                  <div key={groupName} className="mb-4">
+                    {isLesson ? (
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium text-lg text-gray-800">
+                          {groupName}
                         </div>
-                        <div className="font-medium text-xs text-gray-700">
-                          {formatPrice(item)}
+                        <div className="font-medium text-sm text-gray-700">
+                          {groupItems.length > 0 && formatPrice(groupItems[0])}
                         </div>
                       </div>
-                    ))}
+                    ) : (
+                      <>
+                        <div className="font-medium text-lg mt-2">
+                          {groupName}
+                        </div>
+                        {groupItems.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center py-1"
+                          >
+                            <div className="text-gray-700">
+                              {item.newInstrumentName}
+                            </div>
+                            <div className="font-medium text-sm text-gray-700">
+                              {formatPrice(item)}
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>
                 )
               )}
@@ -159,7 +173,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
       )}
 
       {/* 💼 Other Services */}
-      <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
+      <div className="shadow-[0px_2px_12px_0px_#003D3914] p-8 rounded-lg">
         <button
           onClick={() => toggleSection("otherService")}
           className="w-full flex items-center justify-between text-left"
