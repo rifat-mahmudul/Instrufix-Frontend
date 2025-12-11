@@ -68,7 +68,7 @@ export default function SignupForm() {
 
     return (
         <section className="lg:py-20 py-10 flex justify-center items-center">
-            <div className="max-w-2xl mx-auto w-full px-4">
+            <div className="max-w-3xl mx-auto w-full px-4">
                 <div className="text-center space-y-4 lg:pb-10">
                     <h2 className='lg:text-3xl font-bold'>Sign Up</h2>
                     <p className='text-[#485150] lg:text-base'>Please enter your details to create a new account</p>

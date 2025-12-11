@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 
 const signUpFormSchema = z.object({
   email: z.string().email({ message: "Invalid email" }),
@@ -32,6 +33,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [suspended, setSuspended] = useState(false);
+  const [deleted, setDeleted] = useState(false);
 
   const signUpForm = useForm<z.infer<typeof signUpFormSchema>>({
     resolver: zodResolver(signUpFormSchema),
@@ -90,7 +93,23 @@ export default function LoginForm() {
           const token = res.error.split(":")[1];
           router.push(`/auth/verify-email?token=${token}&type=login`);
         } else {
-          toast.error(res.error || "Invalid credentials");
+          if (
+            res?.error?.includes(
+              "Your account is suspended. Please contact support."
+            )
+          ) {
+            setSuspended(true);
+          } else if (
+            res?.error?.includes(
+              "Your account is deleted. Please contact support."
+            )
+          ) {
+            setDeleted(true);
+          } else {
+            toast.error(res.error || "Invalid credentials");
+            setSuspended(false);
+            setDeleted(false);
+          }
         }
       }
     } catch (error) {
@@ -104,9 +123,38 @@ export default function LoginForm() {
     }
   };
 
+  if (suspended) {
+    return (
+      <section className="lg:py-20 py-10 flex justify-center items-center">
+        <div className="max-w-2xl mx-auto w-full px-4">
+          <div className="text-center space-y-4 lg:pb-10">
+            <h2 className="lg:text-3xl font-bold">Limited Access</h2>
+            <p className="text-[#485150] lg:text-base">
+              We’ve temporarily limited your access due to a violation of our
+              community guidelines. If you believe this was a mistake, please
+              contact support for clarification.
+            </p>
+            <Image
+              src="/images/suspended.png"
+              alt="suspended"
+              width={1000}
+              height={1000}
+              className="h-[128px] w-[128px] mx-auto"
+            />
+            <a href="mailto:contact@instrufix.com">
+              <Button variant="default" className="w-full text-lg">
+                Contact Support
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="lg:py-20 py-10 flex justify-center items-center">
-      <div className="max-w-2xl mx-auto w-full px-4">
+      <div className="max-w-3xl mx-auto w-full px-4">
         <div className="text-center space-y-4 lg:pb-10">
           <h2 className="lg:text-3xl font-bold">Log In</h2>
           <p className="text-[#485150] lg:text-base">
@@ -200,6 +248,19 @@ export default function LoginForm() {
             </Button>
           </form>
         </Form>
+        {deleted && (
+          <div className="w-full bg-[#E240401F] rounded-md p-4 mt-12 text-center">
+            <p className="text-[#E24040]">
+              Your profile has been permanently deleted by our admin team. If
+              you believe this action was taken in error or need more
+              information, please reach out to{" "}
+              <a href="mailto:contact@instrufix.com" className="underline">
+                support
+              </a>
+              .
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

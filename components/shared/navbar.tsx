@@ -33,7 +33,6 @@ const Navbar = () => {
     select: (data) => data.data,
     enabled: sessionStatus === "authenticated",
   });
-
   const pathname = usePathname();
 
   const { data: notifications = [] } = useQuery({
@@ -299,7 +298,7 @@ const Navbar = () => {
                   variant="outline"
                   className="hover:bg-[#00998E] border-primary text-[#00998E] hover:text-white rounded-lg px-6 py-2 bg-transparent"
                 >
-                  Signup
+                  Sign Up
                 </Button>
               </Link>
               <Link href="/auth/login">
