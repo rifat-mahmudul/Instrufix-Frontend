@@ -158,8 +158,6 @@ const BusinessGalleryModal = ({
                 <div className="text-xs text-gray-500 mb-2">
                   {new Date(review.createdAt).toLocaleDateString()}
                 </div>
-
-                <p className="text-gray-700 text-sm">{review.feedback}</p>
               </div>
             ))}
 
