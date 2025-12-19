@@ -223,7 +223,13 @@ const Navbar = () => {
                       View Profile
                     </Link>
                     <Link
-                      href="/customer-dashboard/settings"
+                      href={
+                        session?.user?.userType === "user"
+                          ? "/customer-dashboard/settings"
+                          : session?.user?.userType === "businessMan"
+                          ? "/business-dashboard/settings/account"
+                          : "/"
+                      }
                       className="flex gap-2 items-center p-2 rounded-lg hover:bg-gray-50"
                     >
                       <Settings className="h-6 w-6" />
@@ -385,7 +391,13 @@ const Navbar = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
                     <Link
-                      href="/customer-dashboard/settings"
+                      href={
+                        session?.user?.userType === "user"
+                          ? "/customer-dashboard/settings"
+                          : session?.user?.userType === "businessMan"
+                          ? "/business-dashboard/settings/account"
+                          : "/"
+                      }
                       className="flex gap-2 items-center"
                     >
                       <Settings className="h-6 w-6" />
