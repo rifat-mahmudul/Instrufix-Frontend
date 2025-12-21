@@ -182,7 +182,7 @@ export default function ContributionTabs() {
                                             <p>You haven&apos;t written any reviews yet. Share your story to guide fellow musicians.</p>
                                         </div>
                                     </div>
-                                    <Link href="/review-business" className="flex-shrink-0">
+                                    <Link href="/review-a-business" className="flex-shrink-0">
                                         <Button>
                                             Write a Review
                                         </Button>
@@ -262,7 +262,7 @@ export default function ContributionTabs() {
                                             <p>Help other musicians by sharing pictures of your repair experience and favorite shops</p>
                                         </div>
                                     </div>
-                                    <Link href="/review-business" className="flex-shrink-0">
+                                    <Link href="/review-a-business" className="flex-shrink-0">
                                         <Button>
                                             Upload Photos
                                         </Button>
@@ -305,7 +305,7 @@ export default function ContributionTabs() {
                                             <p>Know a hidden gem? Add it to support our music community</p>
                                         </div>
                                     </div>
-                                    <Link href="/add-business" className="flex-shrink-0">
+                                    <Link href="/add-a-business" className="flex-shrink-0">
                                         <Button>
                                             Add Business
                                         </Button>
