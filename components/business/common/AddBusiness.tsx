@@ -336,7 +336,8 @@ const AddBusiness = () => {
       return res;
     },
     onSuccess: () => {
-      return pathName === "/add-my-business"
+      return pathName === "/add-my-business" ||
+        pathName === "/business-dashboard/add-my-business"
         ? setIsBusinessSuccessModalOpen(true)
         : setIsLogoutBusinessSuccessModalOpen(true);
     },
