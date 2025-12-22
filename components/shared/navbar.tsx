@@ -389,14 +389,14 @@ const Navbar = () => {
                       {"View Profile"}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer">
                     <Link
                       href={
                         session?.user?.userType === "user"
                           ? "/customer-dashboard/settings"
                           : session?.user?.userType === "businessMan"
                           ? "/business-dashboard/settings/account"
-                          : "/"
+                          : "/admin-dashboard/settings/account"
                       }
                       className="flex gap-2 items-center"
                     >
@@ -404,7 +404,7 @@ const Navbar = () => {
                       {"Settings"}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer">
                     <div
                       className="flex gap-2 items-center"
                       onClick={() => signOut()}
