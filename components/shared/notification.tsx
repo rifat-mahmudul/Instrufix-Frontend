@@ -19,9 +19,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Menu } from "@headlessui/react";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton from shadcn/ui
+import { Skeleton } from "@/components/ui/skeleton";
 
-// 1. Types
 type NotificationType =
   | "new_business_submitted"
   | "business_submission"
@@ -46,7 +45,6 @@ type NotificationStyle = {
   icon: JSX.Element;
 };
 
-// 2. Style map
 const styleMap: Record<NotificationType, NotificationStyle> = {
   new_business_submitted: {
     bg: "bg-[#e0f2f1]",
@@ -86,7 +84,7 @@ const styleMap: Record<NotificationType, NotificationStyle> = {
   },
 };
 
-const Page = () => {
+const Notifications = () => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const queryClient = useQueryClient();
@@ -140,43 +138,38 @@ const Page = () => {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Notifications</h2>
-        <button className="font-semibold text-teal-600 hover:underline">
-          Mark All Read
-        </button>
+        {notifications.length > 0 && (
+          <button className="font-semibold text-teal-600 hover:underline">
+            Mark All Read
+          </button>
+        )}
       </div>
 
-      <div className="space-y-2">
-        {isLoading || isFetching ? (
-          // Skeleton loader while loading
-          <>
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="rounded-lg p-4 flex items-center gap-4 bg-slate-100 dark:bg-slate-800 animate-pulse"
-              >
-                {/* Circular icon skeleton */}
-                <Skeleton className="w-10 h-10 rounded-full" />
-
-                {/* Text block */}
-                <div className="flex flex-col flex-1 space-y-2">
-                  {/* Title skeleton - wider */}
-                  <Skeleton className="h-6 w-5/6 rounded-md" />
-                  {/* Message skeleton - smaller lines to simulate multi-line */}
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-full rounded-md" />
-                    <Skeleton className="h-4 w-4/5 rounded-md" />
-                  </div>
-                  {/* Time skeleton - small */}
-                  <Skeleton className="h-3 w-1/4 rounded-md self-end" />
+      {isLoading || isFetching ? (
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-lg p-4 flex items-center gap-4 bg-slate-100 dark:bg-slate-800 animate-pulse"
+            >
+              <Skeleton className="w-10 h-10 rounded-full" />
+              <div className="flex flex-col flex-1 space-y-2">
+                <Skeleton className="h-6 w-5/6 rounded-md" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-full rounded-md" />
+                  <Skeleton className="h-4 w-4/5 rounded-md" />
                 </div>
+                <Skeleton className="h-3 w-1/4 rounded-md self-end" />
               </div>
-            ))}
-          </>
-        ) : (
-          notifications.map((n) => {
+            </div>
+          ))}
+        </div>
+      ) : notifications.length > 0 ? (
+        <div className="space-y-2">
+          {notifications.map((n) => {
             const style =
               styleMap[n.type as NotificationType] || styleMap.default;
             const time = formatDistanceToNow(new Date(n.createdAt), {
@@ -218,11 +211,20 @@ const Page = () => {
                 </Menu>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-24 h-24 mb-4 text-gray-300">
+            <Bell className="w-full h-full" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            No Notifications Yet
+          </h3>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Page;
+export default Notifications;

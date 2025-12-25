@@ -82,9 +82,9 @@ const Navbar = () => {
                   href={`${
                     session?.user?.userType === "user"
                       ? "/customer-dashboard/settings/notifications"
-                      : session?.user?.userType === "admin"
-                      ? "/admin-dashboard/settings"
-                      : "/business-dashboard/settings/notifications"
+                      : session?.user?.userType === "businessMan"
+                      ? "/business-dashboard/settings/notifications"
+                      : "/admin-dashboard/settings/notifications"
                   }`}
                 >
                   <Bell className="h-5 w-5" />
@@ -341,7 +341,15 @@ const Navbar = () => {
                 </Link>
               )}
               <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full relative">
-                <Link href={`/notifications`}>
+                <Link
+                  href={`${
+                    session?.user?.userType === "user"
+                      ? "/customer-dashboard/settings/notifications"
+                      : session?.user?.userType === "businessMan"
+                      ? "/business-dashboard/settings/notifications"
+                      : "/admin-dashboard/settings/notifications"
+                  }`}
+                >
                   <Bell className="h-6 w-6" />
                   {notificationCount > 0 && (
                     <span
@@ -389,14 +397,14 @@ const Navbar = () => {
                       {"View Profile"}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer">
                     <Link
                       href={
                         session?.user?.userType === "user"
                           ? "/customer-dashboard/settings"
                           : session?.user?.userType === "businessMan"
                           ? "/business-dashboard/settings/account"
-                          : "/"
+                          : "/admin-dashboard/settings/account"
                       }
                       className="flex gap-2 items-center"
                     >
@@ -404,7 +412,7 @@ const Navbar = () => {
                       {"Settings"}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer">
                     <div
                       className="flex gap-2 items-center"
                       onClick={() => signOut()}

@@ -1,18 +1,18 @@
 "use client";
-import AddBusiness from "@/components/business/common/AddBusiness";
-import CheckCustomerModal from "@/components/business/modal/check-customer-modal";
-import LoginModal from "@/components/business/modal/login-modal";
 import PathTracker from "@/components/shared/PathTracker";
-import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
+import ClaimReviewBusiness from "./ClaimReviewBusiness";
+import { useSession } from "next-auth/react";
+import LoginModal from "@/components/business/modal/login-modal";
+import CheckCustomerModal from "@/components/business/modal/check-customer-modal";
 
-const AddMyBusiness = () => {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
-  const [isCheckCustomerModal, setIsCheckCustomerModal] =
-    useState<boolean>(false);
+const ClaimBusiness = () => {
   const session = useSession();
   const status = session?.status;
   const role = session?.data?.user?.userType;
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isCheckCustomerModal, setIsCheckCustomerModal] =
+    useState<boolean>(false);
 
   useEffect(() => {
     if (status === "loading") {
@@ -38,14 +38,12 @@ const AddMyBusiness = () => {
     <div className="container pt-8 pb-16">
       <div>
         <PathTracker
-          title={"Please fill out all the details of the business."}
+          title={"Search and claim your business to gain exclusive rights."}
         />
       </div>
 
-      <div className=" border-b border-gray-200 pt-8"></div>
-
-      <div className="pt-8">
-        <AddBusiness />
+      <div>
+        <ClaimReviewBusiness />
       </div>
 
       <LoginModal
@@ -61,4 +59,4 @@ const AddMyBusiness = () => {
   );
 };
 
-export default AddMyBusiness;
+export default ClaimBusiness;

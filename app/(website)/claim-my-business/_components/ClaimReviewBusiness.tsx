@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, Star } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -175,22 +176,26 @@ const ClaimReviewBusiness = () => {
                   <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
                     {/* Profile Image */}
                     <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
-                      <Image
-                        src={business?.businessInfo?.image?.[0]}
-                        alt="business.png"
-                        width={1000}
-                        height={1000}
-                        className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
-                      />
+                      <Link href={`/search-result/${business?._id}`}>
+                        <Image
+                          src={business?.businessInfo?.image?.[0]}
+                          alt="business.png"
+                          width={1000}
+                          height={1000}
+                          className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
+                        />
+                      </Link>
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 w-full">
                       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {business?.businessInfo?.name}
-                          </h3>
+                          <Link href={`/search-result/${business?._id}`}>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {business?.businessInfo?.name}
+                            </h3>
+                          </Link>
 
                           {/* Rating */}
                           <div className="flex items-center gap-1 my-3">

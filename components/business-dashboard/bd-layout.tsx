@@ -13,26 +13,25 @@ import {
 } from "@/components/ui/select";
 import { useBusinessContext } from "@/lib/business-context";
 
-
 export default function BusinessDashboardLayout() {
   const pathname = usePathname();
 
   const tabs = [
+    { name: "Add My Business", href: "/business-dashboard/add-my-business" },
     { name: "Profile", href: "/business-dashboard/profile" },
     { name: "Dashboard", href: "/business-dashboard/bd-dashboard" },
     { name: "Reviews", href: "/business-dashboard/reviews" },
     { name: "Messages", href: "/business-dashboard/messages" },
-     { name: "Settings", href: "/business-dashboard/settings" },
+    { name: "Settings", href: "/business-dashboard/settings" },
   ];
 
   const { data: myBusinesses } = useQuery({
     queryKey: ["myBusinesses"],
     queryFn: getMyBusinesses,
     select: (data) => data?.data,
-  })
+  });
 
-  const { selectedBusinessId, setSelectedBusinessId } = useBusinessContext()
-
+  const { selectedBusinessId, setSelectedBusinessId } = useBusinessContext();
 
   return (
     <section className="border-b py-4">
@@ -45,10 +44,11 @@ export default function BusinessDashboardLayout() {
               <Link
                 key={tab.name}
                 href={tab.href}
-                className={`py-1 text-sm font-medium ${isActive
-                  ? "text-teal-600 border-b-2 border-teal-600"
-                  : "text-gray-700 hover:text-teal-600"
-                  }`}
+                className={`py-1 text-sm font-medium ${
+                  isActive
+                    ? "text-teal-600 border-b-2 border-teal-600"
+                    : "text-gray-700 hover:text-teal-600"
+                }`}
               >
                 {tab.name}
               </Link>
@@ -64,11 +64,17 @@ export default function BusinessDashboardLayout() {
               <SelectValue placeholder="Select Business" />
             </SelectTrigger>
             <SelectContent>
-              {myBusinesses?.map((business: { _id: string, name: string, businessInfo: { name: string, } }) => (
-                <SelectItem key={business._id} value={business._id}>
-                  {business.businessInfo.name}
-                </SelectItem>
-              ))}
+              {myBusinesses?.map(
+                (business: {
+                  _id: string;
+                  name: string;
+                  businessInfo: { name: string };
+                }) => (
+                  <SelectItem key={business._id} value={business._id}>
+                    {business.businessInfo.name}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
         </div>

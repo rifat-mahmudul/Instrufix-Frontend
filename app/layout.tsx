@@ -30,7 +30,7 @@ export default function RootLayout({
           <QueryProvider>
             <BusinessContextProvider>
               <LayoutVisibilityWrapper>
-                <main className="min-h-[calc(100vh-510px)]">{children}</main>
+                <main className="min-h-[calc(100vh-480px)]">{children}</main>
                 <Toaster position="top-right" />
                 <NextTopLoader color="#0f766e" showSpinner={false} />
               </LayoutVisibilityWrapper>
