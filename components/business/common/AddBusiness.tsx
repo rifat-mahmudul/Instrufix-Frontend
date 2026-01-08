@@ -327,7 +327,10 @@ const AddBusiness = () => {
   const { mutateAsync: addBusinessData, isPending } = useMutation({
     mutationKey: ["add-business"],
     mutationFn: async (data: FormData) => {
-      const res = await addBusiness(data);
+      
+      const queryType = pathName === "/add-my-business" ? "myBusiness" : "addABusiness"
+
+      const res = await addBusiness(data, queryType);
       if (!res.success) {
         throw new Error(
           res.response.data.message || "Business creation failed"

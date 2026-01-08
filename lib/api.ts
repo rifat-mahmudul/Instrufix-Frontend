@@ -164,9 +164,9 @@ export async function sendMessage({ data }: any) {
 }
 
 //add a business
-export async function addBusiness(payload: any) {
+export async function addBusiness(payload: any, queryType: string) {
   try {
-    const response = await api.post(`/business/create`, payload);
+    const response = await api.post(`/business/create?type=${queryType}`, payload);
     return response.data;
   } catch (error) {
     console.error("Error sending message:", error);
