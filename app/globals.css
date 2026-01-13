@@ -133,3 +133,20 @@
   display: inline-flex;
   align-items: center;
 }
+
+.safari input[type="radio"] {
+  -webkit-appearance: radio;
+  appearance: radio;
+
+  width: auto;
+  height: auto;
+
+  border-radius: 50%;
+  box-sizing: border-box;
+
+  transform: none !important;
+}
+
+.safari label:has(input[type="radio"]) {
+  align-items: baseline;
+}
