@@ -98,8 +98,8 @@ const BusinessCard = ({ business }: { business: Business }) => {
               {/* Image Slider */}
               <div className="relative w-full sm:w-[200px] h-[160px] sm:h-[200px] rounded-lg overflow-hidden">
                 <Image
-                  src={images[currentImageIndex] || "/placeholder-image.jpg"}
-                  alt={business.businessInfo?.name || "Business image"}
+                  src={business?.businessInfo?.image[currentImageIndex] || "/placeholder-image.jpg"}
+                  alt={business?.businessInfo?.name || "Business image"}
                   width={200}
                   height={200}
                   className="rounded-lg object-cover w-full h-full transition-transform duration-300 hover:scale-105"
