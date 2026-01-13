@@ -10,12 +10,13 @@ export default function Footer() {
   const router = useRouter();
   const session = useSession();
   const status = session?.status;
+  const role = session?.data?.user?.userType;
 
   useEffect(() => {
-    if (status === "authenticated" && pathName === "/add-a-business") {
+    if (status === "authenticated" && pathName === "/add-a-business" && role === "businessMan") {
       router.push("/add-my-business");
     }
-  }, [status, pathName, router]);
+  }, [status, pathName, router, role]);
 
   return (
     <footer className="py-20 bg-[#139a8e]">
