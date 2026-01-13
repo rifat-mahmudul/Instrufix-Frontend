@@ -121,12 +121,11 @@
   }
 }
 
-/* ✅ SAFARI CHECKBOX + RADIO FIX */
 .safari input[type="checkbox"],
 .safari input[type="radio"] {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
+  -webkit-appearance: auto;
+  appearance: auto;
+  accent-color: hsl(var(--primary));
   vertical-align: middle;
 }
 
@@ -134,10 +133,3 @@
   display: inline-flex;
   align-items: center;
 }
-
-.safari input[type="checkbox"],
-.safari input[type="radio"] {
-  all: revert;
-  accent-color: currentColor;
-}
-
