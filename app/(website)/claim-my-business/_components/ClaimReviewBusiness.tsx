@@ -4,7 +4,7 @@ import ReviewModal from "@/components/modals/ReviewModal";
 import ReviewSubmittedModal from "@/components/modals/ReviewSubmittedModal";
 import AddBusinessSection from "@/components/shared/AddBusinessSection";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Shadcn Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 import { getAllbusiness } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Star } from "lucide-react";
@@ -13,6 +13,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+
+interface Review {
+  _id: string;
+  rating: number;
+  status: string;
+}
 
 interface BusinessItem {
   email: string;
@@ -29,7 +35,25 @@ interface Business {
   businessInfo: BusinessItem;
   instrumentInfo: Service[];
   isClaimed?: boolean;
+  review: Review[];
 }
+
+// Helper function to calculate average rating
+const calculateAverageRating = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return "0.0";
+
+  // Only count approved reviews
+  const approvedReviews = reviews.filter(
+    (review) => review.status === "approved",
+  );
+  if (approvedReviews.length === 0) return "0.0";
+
+  const totalRating = approvedReviews.reduce((sum, review) => {
+    return sum + review.rating;
+  }, 0);
+
+  return (totalRating / approvedReviews.length).toFixed(1);
+};
 
 const ClaimReviewBusiness = () => {
   const pathname = usePathname();
@@ -49,7 +73,7 @@ const ClaimReviewBusiness = () => {
     queryFn: async () => await getAllbusiness().then((res) => res.data),
   });
 
-  // ✅ Filter businesses based on search query
+  // Filter businesses based on search query
   const filteredBusiness = allBusiness.filter((business: Business) =>
     business?.businessInfo?.name
       ?.toLowerCase()
@@ -60,14 +84,14 @@ const ClaimReviewBusiness = () => {
     (business: Business) => business?.isClaimed === false,
   );
 
-  // ✅ Pagination applied to filtered list
+  // Pagination applied to filtered list
   const totalPages = Math.ceil(filteredBusiness.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentBusiness = filteredBusiness.slice(startIndex, endIndex);
 
   const handleSearch = () => {
-    setCurrentPage(1); // reset to first page after search
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -192,12 +216,12 @@ const ClaimReviewBusiness = () => {
               {pathname === "/review-a-business" && (
                 <>
                   {currentBusiness.length === 0 ? (
-                    <EmptyState 
+                    <EmptyState
                       message={
-                        searchQuery 
-                          ? "No instructors found matching your search." 
+                        searchQuery
+                          ? "No instructors found matching your search."
                           : "No businesses available for review at the moment."
-                      } 
+                      }
                     />
                   ) : (
                     currentBusiness.map((business: Business) => (
@@ -210,7 +234,10 @@ const ClaimReviewBusiness = () => {
                           <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
                             <Link href={`/search-result/${business?._id}`}>
                               <Image
-                                src={business?.businessInfo?.image?.[0] || "/placeholder.jpg"}
+                                src={
+                                  business?.businessInfo?.image?.[0] ||
+                                  "/placeholder.jpg"
+                                }
                                 alt="business.png"
                                 width={1000}
                                 height={1000}
@@ -229,11 +256,11 @@ const ClaimReviewBusiness = () => {
                                   </h3>
                                 </Link>
 
-                                {/* Rating */}
+                                {/* Dynamic Rating - Now calculates actual average */}
                                 <div className="flex items-center gap-1 my-3">
                                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                   <span className="text-sm font-medium">
-                                    {"3.7"}
+                                    {calculateAverageRating(business?.review)}
                                   </span>
                                 </div>
 
@@ -279,9 +306,7 @@ const ClaimReviewBusiness = () => {
               {pathname === "/claim-my-business" && (
                 <>
                   {unClaimedBusiness.length === 0 ? (
-                    <EmptyState 
-                      message="No unclaimed businesses available at the moment." 
-                    />
+                    <EmptyState message="No unclaimed businesses available at the moment." />
                   ) : (
                     unClaimedBusiness.map((business: Business) => (
                       <div
@@ -293,7 +318,10 @@ const ClaimReviewBusiness = () => {
                           <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
                             <Link href={`/search-result/${business?._id}`}>
                               <Image
-                                src={business?.businessInfo?.image?.[0] || "/placeholder.jpg"}
+                                src={
+                                  business?.businessInfo?.image?.[0] ||
+                                  "/placeholder.jpg"
+                                }
                                 alt="business.png"
                                 width={1000}
                                 height={1000}
@@ -312,11 +340,11 @@ const ClaimReviewBusiness = () => {
                                   </h3>
                                 </Link>
 
-                                {/* Rating */}
+                                {/* Dynamic Rating - For unclaimed businesses too */}
                                 <div className="flex items-center gap-1 my-3">
                                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                   <span className="text-sm font-medium">
-                                    {"3.7"}
+                                    {calculateAverageRating(business?.review)}
                                   </span>
                                 </div>
 
@@ -363,32 +391,39 @@ const ClaimReviewBusiness = () => {
           )}
         </div>
 
-        {/* Pagination - Only show when there are items */}
-        {!isLoading && pathname === "/review-a-business" && totalPages > 1 && currentBusiness.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => handlePageChange(page)}
-                className={
-                  currentPage === page ? "bg-teal-600 hover:bg-teal-700" : ""
-                }
-              >
-                {page}
-              </Button>
-            ))}
-            {currentPage < totalPages && (
-              <Button
-                onClick={() => handlePageChange(currentPage + 1)}
-                className="bg-teal-600 hover:bg-teal-700 text-white ml-2"
-              >
-                Next Page
-              </Button>
-            )}
-          </div>
-        )}
+        {/* Pagination */}
+        {!isLoading &&
+          pathname === "/review-a-business" &&
+          totalPages > 1 &&
+          currentBusiness.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    className={
+                      currentPage === page
+                        ? "bg-teal-600 hover:bg-teal-700"
+                        : ""
+                    }
+                  >
+                    {page}
+                  </Button>
+                ),
+              )}
+              {currentPage < totalPages && (
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className="bg-teal-600 hover:bg-teal-700 text-white ml-2"
+                >
+                  Next Page
+                </Button>
+              )}
+            </div>
+          )}
 
         {/* Add Business Section */}
         <AddBusinessSection />
