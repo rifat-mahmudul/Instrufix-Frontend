@@ -248,7 +248,7 @@ const BusinessGalleryModal = ({
                   {currentItem.user.name || "Anonymous User"}
                 </h3>
                 <p className="text-xs text-gray-500">
-                  {currentItem.user.email}
+                  {new Date(currentItem?.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
