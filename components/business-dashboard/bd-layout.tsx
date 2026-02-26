@@ -12,9 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBusinessContext } from "@/lib/business-context";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 export default function BusinessDashboardLayout() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const tabs = [
     { name: "Add My Business", href: "/business-dashboard/add-my-business" },
@@ -36,7 +39,8 @@ export default function BusinessDashboardLayout() {
   return (
     <section className="border-b py-4">
       <div className="container flex justify-between items-center">
-        <nav className="flex lg:space-x-6 space-x-2">
+        {/* Desktop Navigation - hidden on mobile */}
+        <nav className="hidden sm:flex lg:space-x-6 space-x-2">
           {tabs.map((tab) => {
             const isActive =
               pathname === tab.href || pathname.startsWith(`${tab.href}/`);
@@ -55,6 +59,22 @@ export default function BusinessDashboardLayout() {
             );
           })}
         </nav>
+
+        {/* Mobile Hamburger Menu - only for phones */}
+        <div className="sm:hidden">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 hover:bg-gray-100 rounded-md"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
+        {/* Business Select */}
         <div className="">
           <Select
             value={selectedBusinessId}
@@ -79,6 +99,32 @@ export default function BusinessDashboardLayout() {
           </Select>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown - only for phones */}
+      {mobileMenuOpen && (
+        <div className="container sm:hidden mt-4">
+          <nav className="flex flex-col space-y-1">
+            {tabs.map((tab) => {
+              const isActive =
+                pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+              return (
+                <Link
+                  key={tab.name}
+                  href={tab.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`py-2 px-2 text-sm font-medium ${
+                    isActive
+                      ? "text-teal-600 border-l-2 border-teal-600 bg-teal-50"
+                      : "text-gray-700 hover:text-teal-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {tab.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      )}
     </section>
   );
 }
