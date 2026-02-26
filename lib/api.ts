@@ -20,7 +20,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // User API
@@ -166,7 +166,10 @@ export async function sendMessage({ data }: any) {
 //add a business
 export async function addBusiness(payload: any, queryType: string) {
   try {
-    const response = await api.post(`/business/create?type=${queryType}`, payload);
+    const response = await api.post(
+      `/business/create?type=${queryType}`,
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("Error sending message:", error);
@@ -245,7 +248,7 @@ export async function getAllBusinessClaims(query?: {
 
 export async function updateBusinessClaimStatus(
   claimId: string,
-  status: string
+  status: string,
 ) {
   try {
     const response = await api.put(`/claim-bussiness/claim/${claimId}`, {
@@ -282,7 +285,7 @@ export async function addReview(data: ReviewType) {
         rating: data.rating,
         feedback: data.feedback,
         business: data.business,
-      })
+      }),
     );
 
     // Append each file
@@ -315,9 +318,14 @@ export async function getAllInstrument() {
 }
 
 //get all instrument types
-export async function getInstrumentTypes(selectedInstrumentsGroup : string, selectedInstrumentsGroupMusic : string) {
+export async function getInstrumentTypes(
+  selectedInstrumentsGroup: string,
+  selectedInstrumentsGroupMusic: string,
+) {
   try {
-    const response = await api.get(`/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`);
+    const response = await api.get(
+      `/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching saved business:", error);
@@ -347,9 +355,8 @@ export async function deleteNotification(id: string) {
   }
 }
 
-
 //get my review
-export async function getMyReview(id : string) {
+export async function getMyReview(id: string) {
   try {
     const response = await api.get(`/review/${id}`);
     return response.data;
@@ -358,3 +365,25 @@ export async function getMyReview(id : string) {
     return error;
   }
 }
+
+export const markAllNotificationsAsRead = async (
+  token: string,
+): Promise<any> => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/notification/all-read`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to mark all as read");
+  }
+
+  return response.json();
+};
