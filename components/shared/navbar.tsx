@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +44,11 @@ const Navbar = () => {
     },
   });
 
-  const notificationCount = notifications.length;
+  // Filter only unread notifications for the count
+  const unreadNotifications = notifications.filter(
+    (notification: any) => notification.isRead === false
+  );
+  const notificationCount = unreadNotifications.length;
 
   // Check if search bar should be shown (show on all pages except landing page)
   const shouldShowSearchBar = pathname !== "/";

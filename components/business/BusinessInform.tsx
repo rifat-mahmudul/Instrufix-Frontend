@@ -1,6 +1,6 @@
 import { ImageUp, MapPin } from "lucide-react";
 import Image from "next/image";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { MdDelete } from "react-icons/md";
 
 interface Error {
@@ -56,7 +56,6 @@ interface PlaceResult {
 const usePhoneFormatter = () => {
   const formatPhoneNumber = (value: string): string => {
     const cleaned = value.replace(/\D/g, "");
-
     const limited = cleaned.slice(0, 10);
 
     if (limited.length === 0) {
@@ -102,69 +101,112 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string>("");
+
   const addressInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const lastApiCallRef = useRef<string>(""); // Track last API call to prevent duplicate calls
 
   const { formatPhoneNumber, validatePhoneNumber } = usePhoneFormatter();
 
-  // Fetch location suggestions from OpenStreetMap (Nominatim)
-  useEffect(() => {
-    if (!addressName || addressName.length < 2) {
+  // Debounced API call function
+  const fetchLocations = useCallback(async (query: string) => {
+    if (!query || query.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
-    const fetchLocations = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            addressName,
-          )}&format=json&addressdetails=1&limit=10&countrycodes=us,ca`,
-        );
-        const data: PlaceResult[] = await response.json();
+    // Prevent duplicate API calls for same query
+    if (lastApiCallRef.current === query) {
+      return;
+    }
 
-        // Filter results that have at least city/town and state information
-        const filteredResults = data.filter(
-          (place) =>
-            (place.address.city ||
-              place.address.town ||
-              place.address.village) &&
-            place.address.state,
-        );
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          query,
+        )}&format=json&addressdetails=1&limit=5&countrycodes=us,ca`, // Reduced limit to 5 for better performance
+      );
+      const data: PlaceResult[] = await response.json();
 
-        setSuggestions(filteredResults);
-        setShowSuggestions(filteredResults.length > 0);
-      } catch (error) {
-        console.error("Error fetching locations:", error);
-        setSuggestions([]);
-      } finally {
-        setIsLoading(false);
+      // Filter results that have at least city/town and state information
+      const filteredResults = data.filter(
+        (place) =>
+          (place.address.city || place.address.town || place.address.village) &&
+          place.address.state,
+      );
+
+      setSuggestions(filteredResults);
+      setShowSuggestions(filteredResults.length > 0);
+      lastApiCallRef.current = query; // Store the last query
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+      setSuggestions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Handle input change with debounce
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAddressName(value);
+
+    if (value.trim()) {
+      setError((prev) => ({ ...prev, addressName: "" }));
+    }
+
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Don't show suggestions if the value is too short or if it's the same as selected
+    if (value.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Set new timeout for API call
+    timeoutRef.current = setTimeout(() => {
+      fetchLocations(value);
+    }, 500); // Increased debounce time to 500ms
+  };
+
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        addressInputRef.current &&
+        !addressInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
       }
     };
 
-    const timeoutId = setTimeout(fetchLocations, 400);
-    return () => clearTimeout(timeoutId);
-  }, [addressName]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
-  // Validate phone number when it changes
+  // Cleanup timeout on unmount
   useEffect(() => {
-    if (phoneNumber && phoneNumber.replace(/\D/g, "").length > 0) {
-      const isValid = validatePhoneNumber(phoneNumber);
-      if (!isValid && phoneNumber.replace(/\D/g, "").length === 10) {
-        setPhoneError("Please enter a valid 10-digit phone number");
-      } else {
-        setPhoneError("");
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
-    } else {
-      setPhoneError("");
-    }
-  }, [phoneNumber, validatePhoneNumber]);
+    };
+  }, []);
 
   const formatAddress = (place: PlaceResult): string => {
     const address = place.address;
 
-    // Build address components
     const street = address.road
       ? `${address.house_number ? address.house_number + " " : ""}${address.road}`
       : "";
@@ -173,7 +215,6 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     const postcode = address.postcode || "";
     const country = address.country || "";
 
-    // Create formatted address
     let formattedAddress = "";
 
     if (street) {
@@ -203,35 +244,32 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     const fullAddress = formatAddress(place);
     setAddressName(fullAddress);
     setShowSuggestions(false);
+    setSuggestions([]); // Clear suggestions
+    lastApiCallRef.current = fullAddress; // Update last API call to prevent refetch
   };
 
   const handleAddressFocus = () => {
-    if (suggestions.length > 0) setShowSuggestions(true);
+    // Only show if we have suggestions and input has value
+    if (suggestions.length > 0 && addressName.length >= 2) {
+      setShowSuggestions(true);
+    }
   };
 
-  const handleAddressBlur = () => {
-    // Delay hiding suggestions to allow for click
-    setTimeout(() => setShowSuggestions(false), 200);
-  };
-
+  // Phone number handlers (unchanged)
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
 
-    // Allow backspace to delete numbers including formatting characters
     if (input.length < phoneNumber.length) {
-      // If user is deleting, remove last digit but maintain formatting
       const cleanedCurrent = phoneNumber.replace(/\D/g, "");
       const cleanedNew = input.replace(/\D/g, "");
 
       if (cleanedNew.length < cleanedCurrent.length) {
-        // User deleted a digit, format the remaining digits
         const formatted = formatPhoneNumber(cleanedNew);
         setPhoneNumber(formatted);
         return;
       }
     }
 
-    // Format the phone number as user types
     const formatted = formatPhoneNumber(input);
     setPhoneNumber(formatted);
 
@@ -241,7 +279,10 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   };
 
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow only numbers, backspace, delete, tab, and arrow keys
+    if (e.ctrlKey || e.metaKey || e.key === "v" || e.key === "V") {
+      return;
+    }
+
     if (
       !/[\d]/.test(e.key) &&
       ![
@@ -269,13 +310,26 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     }
   };
 
+  // Validate phone number when it changes
+  useEffect(() => {
+    if (phoneNumber && phoneNumber.replace(/\D/g, "").length > 0) {
+      const isValid = validatePhoneNumber(phoneNumber);
+      if (!isValid && phoneNumber.replace(/\D/g, "").length === 10) {
+        setPhoneError("Please enter a valid 10-digit phone number");
+      } else {
+        setPhoneError("");
+      }
+    } else {
+      setPhoneError("");
+    }
+  }, [phoneNumber, validatePhoneNumber]);
+
   return (
     <div>
-      {/* upload photos */}
+      {/* upload photos section - unchanged */}
       <div className="mt-8">
         <label className="text-[24px] font-medium">Business Photos</label>
         <div className="flex gap-5 flex-wrap">
-          {/* Upload button */}
           <div className="w-[200px] h-[200px]">
             <input
               type="file"
@@ -295,7 +349,6 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
             </div>
           </div>
 
-          {/* Image previews */}
           {images.map((image, index) => (
             <div
               key={index}
@@ -339,7 +392,6 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 value={businessName}
                 onChange={(e) => {
                   setBusinessName(e.target.value);
-
                   if (e.target.value.trim()) {
                     setError((prev) => ({ ...prev, businessName: "" }));
                   }
@@ -350,7 +402,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               )}
             </div>
 
-            {/* Address with Autocomplete */}
+            {/* Address with Autocomplete - Fixed */}
             <div className="relative">
               <label className="block text-md font-medium text-gray-700">
                 Address
@@ -359,18 +411,12 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 <input
                   ref={addressInputRef}
                   type="text"
-                  placeholder="488 San Mateo Ave, San Bruno, CA 94066"
+                  placeholder="Business Address"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
-                  onChange={(e) => {
-                    setAddressName(e.target.value);
-
-                    if (e.target.value.trim()) {
-                      setError((prev) => ({ ...prev, addressName: "" }));
-                    }
-                  }}
+                  onChange={handleAddressChange}
                   onFocus={handleAddressFocus}
-                  onBlur={handleAddressBlur}
+                  autoComplete="off"
                 />
                 <MapPin
                   className="absolute top-[50%] left-3 -translate-y-1/2 text-gray-400"
@@ -384,19 +430,28 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
 
               {/* Suggestions Dropdown */}
               {showSuggestions && (
-                <div className="absolute z-20 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto mt-1">
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-20 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto mt-1"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
                   {isLoading ? (
                     <div className="p-3 text-center text-gray-500">
-                      Loading locations...
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                        <span>Loading locations...</span>
+                      </div>
                     </div>
                   ) : suggestions.length === 0 ? (
-                    <div className="p-3 text-gray-500">No locations found</div>
+                    <div className="p-3 text-center text-gray-500">
+                      No locations found
+                    </div>
                   ) : (
                     <ul>
                       {suggestions.map((place, index) => (
                         <li
                           key={index}
-                          className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                          className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors"
                           onClick={() => handleLocationSelect(place)}
                         >
                           <div className="p-3 flex items-start gap-2">
@@ -421,7 +476,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description - unchanged */}
           <div>
             <label className="block text-md font-medium text-gray-700">
               Description
@@ -433,13 +488,11 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
-
                 if (e.target.value.trim()) {
                   setError((prev) => ({ ...prev, description: "" }));
                 }
               }}
             />
-
             {error && <p className="mt-1 text-red-500">{error?.description}</p>}
           </div>
 
@@ -451,7 +504,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               </label>
               <input
                 type="tel"
-                placeholder="(650) 877-0805"
+                placeholder="(xxx) xxx-xxxx"
                 className={`mt-1 w-full rounded-md border bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px] ${
                   phoneError
                     ? "border-red-500 focus:border-red-500"
@@ -461,10 +514,13 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 onChange={handlePhoneChange}
                 onKeyDown={handlePhoneKeyDown}
                 onPaste={handlePhonePaste}
-                maxLength={14} // (3) 3-4 = 14 characters
+                maxLength={14}
               />
               {error && (
                 <p className="mt-1 text-red-500">{error?.phoneNumber}</p>
+              )}
+              {phoneError && !error?.phoneNumber && (
+                <p className="mt-1 text-red-500 text-sm">{phoneError}</p>
               )}
             </div>
 
@@ -479,7 +535,6 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-
                   if (e.target.value.trim()) {
                     setError((prev) => ({ ...prev, email: "" }));
                   }

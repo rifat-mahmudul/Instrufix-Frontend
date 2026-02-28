@@ -33,12 +33,18 @@ interface Service {
   newInstrumentName: string;
 }
 
+interface Review {
+  rating: number;
+  status: string;
+}
+
 export interface SavedBusiness {
   _id: string;
   createdAt: string;
   updatedAt: string;
   savedBusiness: {
     businessInfo: BusinessInfo;
+    review: Review[];
   };
   services: Service[];
   user: UserInfo;
@@ -71,7 +77,7 @@ export default function UserSavedData() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -97,6 +103,23 @@ export default function UserSavedData() {
       console.error("Error in handleDelete:", error);
       toast.error("Failed to delete business");
     }
+  };
+
+  // Calculate average rating from approved reviews
+  const calculateAverageRating = (reviews: Review[]) => {
+    if (!reviews || reviews.length === 0) return "0.0";
+
+    const approvedReviews = reviews.filter(
+      (review) => review.status === "approved",
+    );
+
+    if (approvedReviews.length === 0) return "0.0";
+
+    const totalRating = approvedReviews.reduce((sum, review) => {
+      return sum + review.rating;
+    }, 0);
+
+    return (totalRating / approvedReviews.length).toFixed(1);
   };
 
   if (isLoading)
@@ -151,75 +174,94 @@ export default function UserSavedData() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {savedData?.map((business: SavedBusiness) => (
-        <div
-          key={business?._id}
-          className="bg-white rounded-lg border border-gray-100 shadow-lg p-6 h-full relative"
-        >
-          {/* Delete Button - Top Right Corner */}
-          <button
-            onClick={() => handleDelete(business?._id)}
-            disabled={deleteMutation.isPending}
-            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-opacity duration-200 z-10"
-            title="Remove from saved"
+      {savedData?.map((business: SavedBusiness) => {
+        const averageRating = calculateAverageRating(
+          business?.savedBusiness?.review || [],
+        );
+
+        return (
+          <div
+            key={business?._id}
+            className="bg-white rounded-lg border border-gray-100 shadow-lg p-6 h-full relative"
           >
-            {deleteMutation.isPending &&
-            deleteMutation.variables === business?._id ? (
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-          </button>
+            {/* Delete Button - Top Right Corner */}
+            <button
+              onClick={() => handleDelete(business?._id)}
+              disabled={deleteMutation.isPending}
+              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-opacity duration-200 z-10"
+              title="Remove from saved"
+            >
+              {deleteMutation.isPending &&
+              deleteMutation.variables === business?._id ? (
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </button>
 
-          <div className="flex flex-col gap-5 h-full">
-            {/* Profile Image */}
-            <Link href={`/search-result/${business?._id}`}>
-              <div className="flex-shrink-0 overflow-hidden rounded-lg">
-                <Image
-                  src={business?.savedBusiness?.businessInfo?.image[0]}
-                  alt={"business.png"}
-                  width={1000}
-                  height={1000}
-                  className="rounded-lg object-cover w-full h-[250px] hover:scale-105 transition"
-                />
-              </div>
-            </Link>
+            <div className="flex flex-col gap-5 h-full">
+              {/* Profile Image */}
+              <Link href={`/search-result/${business?._id}`}>
+                <div className="flex-shrink-0 overflow-hidden rounded-lg">
+                  <Image
+                    src={
+                      business?.savedBusiness?.businessInfo?.image[0] ||
+                      "/images/placeholder-business.jpg"
+                    }
+                    alt={
+                      business?.savedBusiness?.businessInfo?.name || "business"
+                    }
+                    width={1000}
+                    height={1000}
+                    className="rounded-lg object-cover w-full h-[250px] hover:scale-105 transition"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/images/placeholder-business.jpg";
+                    }}
+                  />
+                </div>
+              </Link>
 
-            {/* Content */}
-            <Link href={`/search-result/${business?._id}`}>
-              <div className="flex-1 flex flex-col">
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {business?.savedBusiness?.businessInfo?.name}
-                    </h3>
+              {/* Content */}
+              <Link href={`/search-result/${business?._id}`}>
+                <div className="flex-1 flex flex-col">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {business?.savedBusiness?.businessInfo?.name}
+                      </h3>
 
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 my-3">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{"3.7"}</span>
-                    </div>
+                      {/* Rating - Now dynamic */}
+                      <div className="flex items-center gap-1 my-3">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium">
+                          {averageRating}
+                        </span>
+                      </div>
 
-                    {/* Services */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        {business?.services?.map((service: Service, index) => (
-                          <button
-                            className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
-                            key={index}
-                          >
-                            {service?.newInstrumentName}
-                          </button>
-                        ))}
+                      {/* Services */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          {business?.services?.map(
+                            (service: Service, index) => (
+                              <button
+                                className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
+                                key={index}
+                              >
+                                {service?.newInstrumentName}
+                              </button>
+                            ),
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

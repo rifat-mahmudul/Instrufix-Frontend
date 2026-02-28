@@ -1,10 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { initSocket } from "@/lib/socket";
 import { useSession } from "next-auth/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getAllNotification, deleteNotification } from "@/lib/api";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import {
+  getAllNotification,
+  deleteNotification,
+  markAllNotificationsAsRead,
+} from "@/lib/api";
 import {
   Bell,
   AlertTriangle,
@@ -16,10 +21,12 @@ import {
   MessageSquareWarning,
   MoreVertical,
   Trash,
+  CheckCheck,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Menu } from "@headlessui/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 type NotificationType =
   | "new_business_submitted"
@@ -38,6 +45,7 @@ type Notification = {
   message: string;
   type: NotificationType;
   createdAt: string;
+  read?: boolean; // Optional field for read status
 };
 
 type NotificationStyle = {
@@ -87,6 +95,8 @@ const styleMap: Record<NotificationType, NotificationStyle> = {
 const Notifications = () => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
+  const token = session?.user?.accessToken;
+  const role = session?.user?.userType;
   const queryClient = useQueryClient();
 
   const [live, setLive] = useState<Notification[]>([]);
@@ -100,6 +110,26 @@ const Notifications = () => {
     queryFn: async () => {
       const res = await getAllNotification();
       return res?.notify || [];
+    },
+  });
+
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => markAllNotificationsAsRead(token as string, role as any),
+    onSuccess: () => {
+      // Update both query cache and live state
+      queryClient.setQueryData<Notification[]>(
+        ["all-notifications"],
+        (old = []) => old.map((n) => ({ ...n, read: true })),
+      );
+
+      setLive((prev) => prev.map((n) => ({ ...n, read: true })));
+
+      toast.success("All notifications marked as read");
+    },
+    onError: (error) => {
+      console.error("Failed to mark all as read:", error);
+      toast.error(error?.message || "Failed to mark all as read");
     },
   });
 
@@ -128,22 +158,39 @@ const Notifications = () => {
 
       queryClient.setQueryData<Notification[]>(
         ["all-notifications"],
-        (old = []) => old.filter((n) => n._id !== id)
+        (old = []) => old.filter((n) => n._id !== id),
       );
 
       setLive((prev) => prev.filter((n) => n._id !== id));
+
+      toast.success("Notification deleted");
     } catch (err) {
       console.error("Delete failed", err);
+      toast.error("Failed to delete notification");
     }
   };
+
+  const handleMarkAllAsRead = () => {
+    if (notifications.length > 0) {
+      markAllAsReadMutation.mutate();
+    }
+  };
+
+  // Check if there are any unread notifications
+  const hasUnread = notifications.some((n) => !n.read);
 
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Notifications</h2>
-        {notifications.length > 0 && (
-          <button className="font-semibold text-teal-600 hover:underline">
-            Mark All Read
+        {notifications.length > 0 && hasUnread && (
+          <button
+            onClick={handleMarkAllAsRead}
+            disabled={markAllAsReadMutation.isPending}
+            className="font-semibold text-teal-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <CheckCheck className="w-4 h-4" />
+            {markAllAsReadMutation.isPending ? "Marking..." : "Mark All Read"}
           </button>
         )}
       </div>
@@ -179,7 +226,9 @@ const Notifications = () => {
             return (
               <div
                 key={n._id}
-                className={`rounded-lg p-4 flex justify-between items-center ${style.bg}`}
+                className={`rounded-lg p-4 flex justify-between items-center ${style.bg} ${
+                  !n.read ? "border-l-4 border-teal-500" : ""
+                }`}
               >
                 <div className="flex gap-3">
                   <div className="pt-1">{style.icon}</div>
@@ -202,7 +251,7 @@ const Notifications = () => {
                             active ? "bg-gray-100" : ""
                           }`}
                         >
-                          <Trash />
+                          <Trash className="w-4 h-4" />
                           Delete
                         </button>
                       )}

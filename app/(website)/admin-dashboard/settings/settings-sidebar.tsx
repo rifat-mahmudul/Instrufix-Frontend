@@ -31,8 +31,8 @@ export default function SettingsSidebar() {
         role === "user"
           ? "/customer-dashboard/settings/notifications"
           : role === "businessMan"
-          ? "/business-dashboard/settings/notifications"
-          : "/admin-dashboard/settings/notifications"
+            ? "/business-dashboard/settings/notifications"
+            : "/admin-dashboard/settings/notifications"
       }`,
       label: "Notifications",
       description: "Manage your notification settings",
@@ -42,9 +42,9 @@ export default function SettingsSidebar() {
 
   return (
     <>
-      {/* Mobile toggle button */}
+      {/* Mobile toggle button - hidden on tablet and above */}
       <button
-        className="absolute top-[152px] left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-muted sm:hidden"
+        className="absolute top-[152px] left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-muted md:hidden"
         onClick={() => setOpen(!open)}
       >
         <Settings className="h-5 w-5" />
@@ -53,8 +53,8 @@ export default function SettingsSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-80 bg-background p-4 transition-transform duration-300 ease-in-out sm:relative sm:translate-x-0 sm:w-full sm:p-0",
-          open ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
+          "fixed inset-y-0 left-0 z-50 w-80 bg-background p-4 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:w-80 md:p-4",
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
         <div className="space-y-3">
@@ -70,7 +70,7 @@ export default function SettingsSidebar() {
                   "flex items-start gap-3 p-3 rounded-lg transition-colors",
                   isActive
                     ? "bg-muted/50 border border-muted"
-                    : "hover:bg-muted/20"
+                    : "hover:bg-muted/20",
                 )}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border">
@@ -86,10 +86,10 @@ export default function SettingsSidebar() {
         </div>
       </aside>
 
-      {/* Overlay when sidebar is open on mobile */}
+      {/* Overlay when sidebar is open on mobile/tablet */}
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/30 sm:hidden"
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
           onClick={() => setOpen(false)}
         />
       )}

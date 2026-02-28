@@ -370,3 +370,26 @@ export async function getMyReview(id: string) {
     return error;
   }
 }
+
+export const markAllNotificationsAsRead = async (
+  token: string,
+  role: any,
+): Promise<any> => {
+  const api = `${process.env.NEXT_PUBLIC_API_URL}/notification/all-read`;
+  const adminApi = `${process.env.NEXT_PUBLIC_API_URL}/notification/all-read-admin`;
+
+  const response = await fetch(role === "admin" ? adminApi : api, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to mark all as read");
+  }
+
+  return response.json();
+};
