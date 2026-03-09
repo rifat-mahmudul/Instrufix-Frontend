@@ -150,12 +150,32 @@ export async function getMessages(data: any, businessId?: string) {
       `/message/get-messages?${businessId ? `businessId=${businessId}` : ""}`,
       data,
     );
+    console.log("this is api response get-all message", response)
     return response.data;
   } catch (error) {
     console.error("Error fetching messages:", error);
     return error;
   }
 }
+
+// export async function getMessages(
+//   data: { chatId: string; userId: string },
+//   businessId?: string
+// ) {
+//   try {
+//     const response = await api.post("/message/get-messages", {
+//       ...data,
+//       businessId,
+//     });
+
+//     console.log("this is api response get-all message", response)
+
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching messages:", error);
+//     throw error;
+//   }
+// }
 
 // Send message
 export async function sendMessage({ data }: any) {

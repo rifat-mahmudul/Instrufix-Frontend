@@ -761,36 +761,71 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     );
   };
 
+  // const { mutateAsync: chatCreation } = useMutation({
+  //   mutationKey: ["create-chat"],
+  //   mutationFn: async (data: { participants: { userId: string; role: string }[] }) => {
+  //     try {
+  //       const response = await fetch(
+  //         `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
+  //         {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //           body: JSON.stringify(data),
+  //         },
+  //       );
+
+  //       if (!response.ok) {
+  //         const errorData = await response.json();
+  //         throw new Error(errorData.message || "Failed to create chat");
+  //       }
+
+  //       const result = await response.json();
+  //       console.log("✅ Server response:", result);
+  //       return result;
+  //     } catch (error) {
+  //       console.error("❌ Error creating chat:", error);
+  //       throw error;
+  //     }
+  //   },
+  // });
+
+
   const { mutateAsync: chatCreation } = useMutation({
-    mutationKey: ["create-chat"],
-    mutationFn: async (data: { participants: { userId: string; role: string }[] }) => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
+  mutationKey: ["create-chat"],
+  mutationFn: async (data: { 
+    participants: { userId: string; role: string }[];
+    businessId?: string;
+  }) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create chat");
+          body: JSON.stringify(data),
         }
+      );
 
-        const result = await response.json();
-        console.log("✅ Server response:", result);
-        return result;
-      } catch (error) {
-        console.error("❌ Error creating chat:", error);
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create chat");
       }
-    },
-  });
+
+      const result = await response.json();
+      console.log("✅ Server response:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ Error creating chat:", error);
+      throw error;
+    }
+  },
+});
 
   const handleReview = () => {
     if (status === "unauthenticated") {
@@ -825,6 +860,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           role: "businessMan",
         },
       ],
+      businessId: singleBusiness._id,
     };
 
     try {

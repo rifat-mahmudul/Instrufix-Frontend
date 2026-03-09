@@ -323,7 +323,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     lastMessage: liveMessages[liveMessages.length - 1]?.message,
   });
 
-  console.log("The chats: ", chats);
+  console.log("The chats: ", selectedChat);
 
   return (
     <div className="flex gap-5 h-[70vh] bg-white container">

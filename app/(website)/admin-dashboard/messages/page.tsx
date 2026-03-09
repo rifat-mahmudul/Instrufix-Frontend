@@ -156,6 +156,8 @@ export default function InboxPage() {
     if (!newMessage.trim()) return;
     if (!myUserId || !selectedChat) return;
 
+    console.log("this is the bussiness id",selectedChat.bussinessId)
+
     const payload = {
       receiverId: selectedChat.bussinessId.user,
       senderId: myUserId,
@@ -167,6 +169,8 @@ export default function InboxPage() {
     formData.append("data", JSON.stringify(payload));
     sendMutation.mutate(formData);
   };
+
+  console.log("handel seleted", handleSend)
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -226,6 +230,8 @@ export default function InboxPage() {
   }, [liveMessages, selectedChat]); // Added selectedChat to dependencies
 
   console.log("Chats left: ", chats[0]);
+
+  console.log("Selected chat: ", selectedChat);
 
   return (
     <div className="flex gap-5 h-[70vh] bg-white container">
