@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { getMyChat, getMessages } from "@/lib/api";
 import { initSocket } from "@/lib/socket";
