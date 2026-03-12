@@ -1,9 +1,9 @@
 "use client";
 
 import type React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
-import { getMyChat, getMessages, sendMessage } from "@/lib/api";
+import { getMyChat, getMessages } from "@/lib/api";
 import { initSocket } from "@/lib/socket";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,18 +40,8 @@ export default function InboxPage() {
 
   console.log("User id: ", myUserId);
 
-  const params = {
-    userId: myUserId as string,
-    chatId: selectedChat?._id,
-  };
-
-  // Get DB messages for selected chat
-  const { data: messages = [] } = useQuery({
-    queryKey: ["messages", selectedChat?._id],
-    queryFn: () =>
-      selectedChat ? getMessages(params).then((res) => res.data) : [],
-    enabled: !!selectedChat,
-  });
+  // No longer using useQuery for messages to avoid synchronization issues
+  // Message loading will be handled in the selectedChat effect
 
   // Initialize socket connection once
   useEffect(() => {
@@ -60,9 +50,25 @@ export default function InboxPage() {
     const socket = initSocket();
     socketRef.current = socket;
 
+    // Ensure socket is connected
+    if (socket.disconnected) {
+      socket.connect();
+    }
+
+    // Join notification room immediately if already connected
+    if (socket.connected) {
+      console.log("Socket already connected, joining notification room:", socket.id);
+      socket.emit("joinNotification", myUserId);
+    }
+
+    socket.on("connect", () => {
+      console.log("Socket newly connected:", socket.id);
+      socket.emit("joinNotification", myUserId);
+    });
+
     // Listen for messages globally
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    socket.on("message", (msg: any) => {
+    socket.on("newMessage", (msg: any) => {
       console.log("New message received via socket:", msg);
 
       // Only update if the message is for the currently selected chat
@@ -91,83 +97,75 @@ export default function InboxPage() {
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     });
 
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
-    });
-
     socket.on("disconnect", () => {
       console.log("Socket disconnected");
     });
 
     return () => {
-      socket.off("message");
+      socket.off("newMessage");
       socket.off("connect");
       socket.off("disconnect");
-      socket.disconnect();
+      // DO NOT call socket.disconnect() here as it kills the singleton
+      // which might be needed by other components or even this one on remount
     };
   }, [myUserId, queryClient]);
 
   // Handle chat selection and room joining
   useEffect(() => {
-    if (!selectedChat || !socketRef.current) return;
+    if (!selectedChat || !socketRef.current || !myUserId) return;
 
     const socket = socketRef.current;
+    const chatId = selectedChat._id;
 
     // Leave previous room if exists
-    if (currentChatRef.current) {
+    if (currentChatRef.current && currentChatRef.current !== chatId) {
       socket.emit("leaveChat", currentChatRef.current);
       console.log(`Left chat room: ${currentChatRef.current}`);
     }
 
     // Update current chat reference
-    currentChatRef.current = selectedChat._id;
+    currentChatRef.current = chatId;
 
     // Join new room
-    socket.emit("joinChat", selectedChat._id);
-    console.log(`Joined chat room: ${selectedChat._id}`);
+    socket.emit("joinChat", chatId);
+    console.log(`Joined chat room: ${chatId}`);
 
-    // Load messages from database and set as live messages
-    if (messages.length > 0) {
-      setLiveMessages(messages);
-    } else {
-      // If messages from query are not ready, fetch them directly
-      getMessages(selectedChat._id).then((res) => {
-        setLiveMessages(res.data);
-      });
-    }
-  }, [selectedChat, messages]);
+    // Load messages from database
+    const params = {
+      userId: myUserId,
+      chatId: chatId,
+    };
+    
+    getMessages(params, selectedChat?.businessId?._id).then((res) => {
+      console.log("Loaded messages:", res.data?.length);
+      setLiveMessages(res.data || []);
+    }).catch(err => {
+      console.error("Error loading messages:", err);
+      setLiveMessages([]);
+    });
 
-  // Send a message mutation
-  const sendMutation = useMutation({
-    mutationFn: (formData: FormData) =>
-      sendMessage({ data: formData }).then((res) => res.data),
-    onSuccess: () => {
-      // Don't add to liveMessages here as it will come through socket
-      setNewMessage("");
-      // Optionally invalidate chats to update last message
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
-    },
-    onError: (error) => {
-      console.error("Failed to send message:", error);
-    },
-  });
+  }, [selectedChat, myUserId]);
+
+  // Mutation removed as we use sockets now
 
   const handleSend = () => {
-    if (!newMessage.trim()) return;
-    if (!myUserId || !selectedChat) return;
+    if (!newMessage.trim() || !myUserId || !selectedChat) return;
 
-    console.log("this is the bussiness id",selectedChat.bussinessId)
+    console.log("sending message via socket to business:", selectedChat.businessId);
 
-    const payload = {
-      receiverId: selectedChat.bussinessId.user,
-      senderId: myUserId,
-      chat: selectedChat._id,
-      message: newMessage,
-    };
-
-    const formData = new FormData();
-    formData.append("data", JSON.stringify(payload));
-    sendMutation.mutate(formData);
+    const socket = socketRef.current;
+    if (socket) {
+      socket.emit("sendMessage", {
+        chatId: selectedChat._id,
+        senderId: myUserId,
+        receiverId: selectedChat.businessId.user,
+        message: newMessage,
+        image: null
+      });
+      setNewMessage("");
+    } else {
+      console.error("Socket not connected");
+    }
   };
 
   console.log("handel seleted", handleSend)
@@ -316,19 +314,19 @@ export default function InboxPage() {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <div className="flex items-center gap-5">
-                    <h2 className="text-lg font-medium text-gray-900 line-clamp-1 max-w-[200px]">
-                      {selectedChat?.bussinessId?.businessInfo?.name}
-                    </h2>
-                    <p className="text-sm text-gray-500 hidden sm:block">
-                      {selectedChat?.bussinessId?.businessInfo?.email}
-                    </p>
+                    <div className="flex items-center gap-5">
+                      <h2 className="text-lg font-medium text-gray-900 line-clamp-1 max-w-[200px]">
+                        {selectedChat?.businessId?.businessInfo?.name}
+                      </h2>
+                      <p className="text-sm text-gray-500 hidden sm:block">
+                        {selectedChat?.businessId?.businessInfo?.email}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <Avatar className="h-12 w-12 mt-1">
-                  <AvatarImage
-                    src={selectedChat?.bussinessId?.businessInfo?.image[0]}
-                  />
+                  <Avatar className="h-12 w-12 mt-1">
+                    <AvatarImage
+                      src={selectedChat?.businessId?.businessInfo?.image[0]}
+                    />
                   <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
                     {getInitials(
                       selectedChat?.senderId?.name ||
@@ -412,7 +410,7 @@ export default function InboxPage() {
                 </div>
                 <Button
                   onClick={handleSend}
-                  disabled={!newMessage.trim() || sendMutation.isPending}
+                  disabled={!newMessage.trim()}
                   className="h-10 w-10 rounded-full bg-[#00998E] hover:bg-[#008A7E] p-0"
                 >
                   <Send className="h-4 w-4" />
